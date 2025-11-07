@@ -1,14 +1,21 @@
 # OpenMP Scheduling strategies for CSR-Based SpMV
 ## Index
 - [What's in the repo](#What's-in-the-repo)
-- [How to run the code](#How-to-run-the-code)
+- [How to run the code](#How-to-compile-and-run-the-code)
 - [Log file format](#Log-file-format)
 
 ## What's in the repo
 
-## How to run the code
+## How to compile and run the code
 ### On PBS-managed cluster
+When running the code on a PBS-managed cluster, the provided PBS script (in the pbs folder is an example with explanation) can be used. The script executes the program multiple times with different parameter combinations and writes a log file that is useful for benchmarking data analysis.
 ### On personal PC
+Firstly compile the code using `gcc -g -Wall -fopenmp src/main.c -o exec`.
+To run the executable one single time with detailed output use the parameter `print` such as in the example:
+```
+gcc -g -Wall -fopenmp src/main.c -o exec
+./exec filename.mtx 10 static 100 print
+```
 
 ## Log file format
 When running the code on a PBS-managed cluster, the provided PBS script can be used. The script executes the program multiple times with different parameter combinations and writes a log file that is useful for benchmarking data analysis. The output file is in CSV format to ensure portability and easy integration with libraries such as Python's Pandas for further analisys.
