@@ -7,6 +7,8 @@
 ## What's in the repo
 
 ## How to run the code
+### On PBS-managed cluster
+### On personal PC
 
 ## Log file format
 When running the code on a PBS-managed cluster, the provided PBS script can be used. The script executes the program multiple times with different parameter combinations and writes a log file that is useful for benchmarking data analysis. The output file is in CSV format to ensure portability and easy integration with libraries such as Python's Pandas for further analisys.
