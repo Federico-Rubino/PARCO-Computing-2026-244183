@@ -8,3 +8,5 @@
 number of threads/CPUs) and default values
 
 □ Cluster-specific notes (modules, queues)
+
+#OpenMP Scheduling strategies for CSR-Based SpMV
