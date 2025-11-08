@@ -1,10 +1,12 @@
 # OpenMP Scheduling strategies for CSR-Based SpMV
 ## Index
 - [What's in the repo](#What's-in-the-repo)
-- [How to run the code](#How-to-compile-and-run-the-code)
+- [How to compile and run the code](#How-to-compile-and-run-the-code)
 - [Log file format](#Log-file-format)
 
 ## What's in the repo
+### src folder
+In src folder there are the `main.c` file that need to be compiled (see [compile and run](#How-to-compile-and-run-the-code) section) and the `utils.h` files that provides the function used in the main, explained in the README.md file of the folder.
 
 ## How to compile and run the code
 ### On PBS-managed cluster
