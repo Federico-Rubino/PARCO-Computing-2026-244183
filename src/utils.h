@@ -12,13 +12,14 @@ typedef struct {
     float *val;  /* nnz values */
 } CSR;
 
+// used only in csr_from_mtx don't put in docs
 typedef struct {
         int row, col;
         float val;
 } coo_t;
 
-
-    // Comparison function for qsort
+// used only in csr_from_mtx don't put in docs
+// Comparison function for qsort
 int cmp_coo(const void *a, const void *b) {
     const coo_t *x = a, *y = b;
     if (x->row != y->row) return x->row - y->row;
