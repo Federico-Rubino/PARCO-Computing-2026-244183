@@ -29,7 +29,7 @@ The CSV file begin with three commented header lines (prefixed with # so remembe
 # n_chunks_start n_chunks_end n_chunks_factor
 ```
 This is followed by the actual data, structured as:
-```
+```csv
 n_thread, schedule_type, chunks, elapsed_time
 <n_thread>,<type>,<chunks - null if serial>,<time_taken>
 .
