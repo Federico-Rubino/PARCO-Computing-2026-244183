@@ -25,11 +25,13 @@ In the `utils.h` file are defined usefull struct and function for the project
 
 ```c
 typedef struct CSR;
-/* Represents a sparse matrix in Compressed Sparse Row (CSR) format, storing row offsets, column indices, non-zero values. */
 ```
+Represents a sparse matrix in Compressed Sparse Row (CSR) format, storing row offsets, column indices, non-zero values. */
 
-`CSR csr_from_mtx(const char *filename)`
-:	Parses a Matrix Market (`.mtx`) file and converts it into an internal CSR data structure, returning a fully initialized `CSR` object
+```c
+CSR csr_from_mtx(const char *filename)
+```
+Parses a Matrix Market (`.mtx`) file and converts it into an internal CSR data structure, returning a fully initialized `CSR` object
 
 `float* generate_vector(size_t n)`
 :	Allocates and returns a vector of length `n`, filled with random floating-point values in the range `[0,1]`
