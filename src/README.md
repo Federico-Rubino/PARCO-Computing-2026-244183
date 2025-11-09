@@ -23,13 +23,13 @@ Time: 0.003888698 s
 
 In the `utils.h` file are defined usefull struct and function for the project
 
-`typedef struct CSR`
+#### `typedef struct CSR`
 Represents a sparse matrix in Compressed Sparse Row (CSR) format, storing row offsets, column indices, non-zero values.
 
-`CSR csr_from_mtx(const char *filename)`
+#### `CSR csr_from_mtx(const char *filename)`
 Parses a Matrix Market (`.mtx`) file and converts it into an internal CSR data structure, returning a fully initialized `CSR` object
 
-`float* generate_vector(size_t n)`
+#### `float* generate_vector(size_t n)`
 Allocates and returns a vector of length `n`, filled with random floating-point values in the range `[0,1]`
 
 `void csr_serial_spmv(CSR *m, const float *v, float *r)`
