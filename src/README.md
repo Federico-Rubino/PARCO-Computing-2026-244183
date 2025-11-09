@@ -25,7 +25,7 @@ In the `utils.h` file are defined usefull struct and function for the project
 
 - `typedef struct CSR`
 
-Represents a sparse matrix in Compressed Sparse Row (CSR) format, storing row offsets, column indices, non-zero values.
+Represents a sparse matrix in **Compressed Sparse Row (CSR)** format, storing row offsets, column indices, non-zero values.
 
 ```c
 typedef struct {
@@ -39,21 +39,28 @@ typedef struct {
 
 - `CSR csr_from_mtx(const char *filename)`
 
-Parses a Matrix Market (`.mtx`) file and converts it into an internal CSR data structure, returning a fully initialized `CSR` object
+Parses a Matrix Market (`.mtx`) file and converts it into an internal CSR data structure, returning a fully initialized `CSR` object.
 
 - `float* generate_vector(size_t n)`
 
-Allocates and returns a vector of length `n`, filled with random floating-point values in the range `[0,1]`
+Allocates and returns a vector of length `n`, filled with random floating-point values in the range `[0,1]`.
 
 - `void csr_serial_spmv(CSR *m, const float *v, float *r)`
 
-Computes the sparse matrix-vector mutliplication `r = m * v` using a serial CSR implementation
+Computes the sparse matrix-vector mutliplication `r = m * v` using a serial CSR implementation.
 
-`void csr_omp_static(CSR *m, const float *v, float *r, int num_threads, int chunk_size)`
+- `void csr_omp_static(CSR *m, const float *v, float *r, int num_threads, int chunk_size)`
 
-`void csr_omp_dynamic(CSR *m, const float *v, float *r, int num_threads, int chunk_size)`
+Performs CSR-based SpMV in parallel using OpenMP with static scheduling, distributing rows in fixed-size chunks across threads.
 
-`void csr_omp_guided(CSR *m, const float *v, float *r, int num_threads, int chunk_size)`
+- `void csr_omp_dynamic(CSR *m, const float *v, float *r, int num_threads, int chunk_size)`
 
-`bool compare_vectors(const float *a, const float *b, size_t n)`
+Performs CSR-based SpMV in parallel using OpenMP with dynamic scheduling, where threads request new chunks of rows as they finish work.
 
+- `void csr_omp_guided(CSR *m, const float *v, float *r, int num_threads, int chunk_size)`
+
+Performs CSR-based SpMV in parallel using OpenMP with guided scheduling, assigning progressively smaller chunks to balance workload.
+
+- `bool compare_vectors(const float *a, const float *b, size_t n)`
+
+Compares two vectors element-wise with a tolerance; returns true if any difference exceeds the numerical threshold.
