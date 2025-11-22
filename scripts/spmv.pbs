@@ -1,0 +1,38 @@
+#!/bin/bash
+#PBS -N spmv_experiments
+#PBS -o path/to/spmv_experiments.out
+#PBS -e path/to/spmv_experiments.err
+#PBS -q short_cpuQ
+#PBS -l walltime=01:00:00
+#PBS -l select=1:ncpus=64:mem=16gb
+
+cd path/to/the/project
+
+echo "Running on node: $(hostname)"
+
+module load gcc91
+
+gcc -std=c99 -O3 -march=native -Wall -fopenmp path/to/main.c -o exec
+
+
+INPUT_FILE="path/to/matrix.mtx"
+BASENAME=$(basename "$INPUT_FILE" .mtx)
+RESULTS_FILE="path/to/results/${BASENAME}.csv"
+[ -f "$RESULTS_FILE" ] && rm "$RESULTS_FILE"
+
+first_line=$(grep -v '^%' "$INPUT_FILE" | head -n 1)
+
+read NROWS NCOLS NNZ <<< "$first_line"
+echo "# $BASENAME $NROWS $NCOLS $NNZ" >> "$RESULTS_FILE"
+
+./exec "$INPUT_FILE" 1 serial >> "$RESULTS_FILE"
+
+
+for i in 1 2 4 8 16 32 64; do
+  ./exec "$INPUT_FILE" "$i" static >> "$RESULTS_FILE"
+done
+
+for i in 1 2 4 8 16 32 64; do
+  ./exec "$INPUT_FILE" "$i" nnzbal >> "$RESULTS_FILE"
+done
+
