@@ -71,14 +71,16 @@ static double now_sec(void){
 
 int main(int argc, char **argv){
     if(argc < 2){
-        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=0] [num_runs=1] [dist_out_file]\n", argv[0]);
+        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=0] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
         return 1;
     }
     const char *filename = argv[1];
     int undirected = argc > 2 ? atoi(argv[2]) : 0;
     uint32_t source = argc > 3 ? (uint32_t)strtoul(argv[3], NULL, 10) : 0;
-    int num_runs = argc > 4 ? atoi(argv[4]) : 1;
-    const char *dist_out = argc > 5 ? argv[5] : NULL;
+    int warmup_runs = argc > 4 ? atoi(argv[4]) : 5;
+    int num_runs = argc > 5 ? atoi(argv[5]) : 10;
+    const char *csv_out = argc > 6 ? argv[6] : NULL;
+    const char *dist_out = argc > 7 ? argv[7] : NULL;
 
     csr_graph_t g;
     if(load_csr(filename, &g, undirected) != 0){
@@ -94,8 +96,17 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    FILE *csv_f = NULL;
+    if(csv_out){
+        csv_f = fopen(csv_out, "w");
+        if(!csv_f) fprintf(stderr, "warning: could not open csv_out '%s' for writing\n", csv_out);
+    }
+
     printf("run,time_ms\n");
-    for(int run = 1; run <= num_runs; run++){
+    if(csv_f) fprintf(csv_f, "run,time_ms\n");
+
+    int total_runs = warmup_runs + num_runs;
+    for(int run = 1; run <= total_runs; run++){
         size_t heap_size;
         dijkstra_init(&g, source, dist, heap, &heap_size);
 
@@ -103,8 +114,15 @@ int main(int argc, char **argv){
         dijkstra(&g, dist, heap, heap_size);
         double end = now_sec();
 
-        printf("%d,%.6f\n", run, (end - start) * 1000.0);
+        if(run <= warmup_runs) continue; // discard: cache/TLB/frequency warm-up, not measured
+
+        int measured_run = run - warmup_runs;
+        double time_ms = (end - start) * 1000.0;
+        printf("%d,%.6f\n", measured_run, time_ms);
+        if(csv_f) fprintf(csv_f, "%d,%.6f\n", measured_run, time_ms);
     }
+
+    if(csv_f) fclose(csv_f);
 
     if(dist_out){
         FILE *f = fopen(dist_out, "w");

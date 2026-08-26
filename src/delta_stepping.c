@@ -144,15 +144,17 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
 
 int main(int argc, char **argv){
     if(argc < 2){
-        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=0] [delta=10] [num_runs=1] [dist_out_file]\n", argv[0]);
+        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=0] [delta=10] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
         return 1;
     }
     const char *filename = argv[1];
     int undirected = argc > 2 ? atoi(argv[2]) : 0;
     uint32_t source = argc > 3 ? (uint32_t)strtoul(argv[3], NULL, 10) : 0;
     float delta = argc > 4 ? (float)atof(argv[4]) : 10.0f;
-    int num_runs = argc > 5 ? atoi(argv[5]) : 1;
-    const char *dist_out = argc > 6 ? argv[6] : NULL;
+    int warmup_runs = argc > 5 ? atoi(argv[5]) : 5;
+    int num_runs = argc > 6 ? atoi(argv[6]) : 10;
+    const char *csv_out = argc > 7 ? argv[7] : NULL;
+    const char *dist_out = argc > 8 ? argv[8] : NULL;
 
     csr_graph_t g;
     if(load_csr(filename, &g, undirected) != 0){
@@ -165,16 +167,32 @@ int main(int argc, char **argv){
     ds_workspace_t ws;
     ds_workspace_init(&ws, &g, delta);
 
+    FILE *csv_f = NULL;
+    if(csv_out){
+        csv_f = fopen(csv_out, "w");
+        if(!csv_f) fprintf(stderr, "warning: could not open csv_out '%s' for writing\n", csv_out);
+    }
+
     printf("run,threads,time_ms\n");
-    for(int run = 1; run <= num_runs; run++){
+    if(csv_f) fprintf(csv_f, "run,threads,time_ms\n");
+
+    int total_runs = warmup_runs + num_runs;
+    for(int run = 1; run <= total_runs; run++){
         ds_reset(&ws, &g, source, dist);
 
         double start = omp_get_wtime();
         delta_stepping(&g, &ws, delta, dist);
         double end = omp_get_wtime();
 
-        printf("%d,%d,%.6f\n", run, omp_get_max_threads(), (end - start) * 1000.0);
+        if(run <= warmup_runs) continue; // discard: thread-pool spin-up / cache warm-up, not measured
+
+        int measured_run = run - warmup_runs;
+        double time_ms = (end - start) * 1000.0;
+        printf("%d,%d,%.6f\n", measured_run, omp_get_max_threads(), time_ms);
+        if(csv_f) fprintf(csv_f, "%d,%d,%.6f\n", measured_run, omp_get_max_threads(), time_ms);
     }
+
+    if(csv_f) fclose(csv_f);
 
     if(dist_out){
         FILE *f = fopen(dist_out, "w");
