@@ -20,7 +20,6 @@ static void bucket_push(bucket_t *b, uint32_t v){
 typedef struct {
     bucket_t *buckets;
     omp_lock_t *bucket_locks;
-    omp_lock_t *vertex_locks;
     bucket_t settled;
     uint32_t num_slots;
 } ds_workspace_t;
@@ -38,19 +37,14 @@ static void ds_workspace_init(ds_workspace_t *ws, csr_graph_t *g, float delta){
     ws->bucket_locks = malloc(ws->num_slots * sizeof(omp_lock_t));
     for(uint32_t i = 0; i < ws->num_slots; i++) omp_init_lock(&ws->bucket_locks[i]);
 
-    ws->vertex_locks = malloc(g->num_vertices * sizeof(omp_lock_t));
-    for(uint64_t i = 0; i < g->num_vertices; i++) omp_init_lock(&ws->vertex_locks[i]);
-
     ws->settled = (bucket_t){0};
 }
 
 static void ds_workspace_free(ds_workspace_t *ws, csr_graph_t *g){
     for(uint32_t i = 0; i < ws->num_slots; i++) free(ws->buckets[i].nodes);
     for(uint32_t i = 0; i < ws->num_slots; i++) omp_destroy_lock(&ws->bucket_locks[i]);
-    for(uint64_t i = 0; i < g->num_vertices; i++) omp_destroy_lock(&ws->vertex_locks[i]);
     free(ws->buckets);
     free(ws->bucket_locks);
-    free(ws->vertex_locks);
     free(ws->settled.nodes);
 }
 
@@ -61,15 +55,21 @@ static void ds_reset(ds_workspace_t *ws, csr_graph_t *g, uint32_t source, float 
     bucket_push(&ws->buckets[0], source);
 }
 
-static void relax(float *dist, omp_lock_t *vertex_locks, bucket_t *buckets,
-                   omp_lock_t *bucket_locks, uint32_t num_slots, float delta,
-                   uint32_t v, float nd){
-    omp_set_lock(&vertex_locks[v]);
-    int improved = nd < dist[v];
-    if(improved) dist[v] = nd;
-    omp_unset_lock(&vertex_locks[v]);
+static void relax(float *dist, bucket_t *buckets,
+                  omp_lock_t *bucket_locks, uint32_t num_slots, float delta,
+                  uint32_t v, float nd){
+    if(nd >= dist[v]) return;
 
-    if(improved){
+    float old_d;
+    #pragma omp atomic compare capture
+    {
+        old_d = dist[v];
+        if(dist[v] > nd){
+            dist[v] = nd;
+        }
+    }
+
+    if(nd < old_d){
         uint32_t slot = (uint32_t)(nd / delta) % num_slots;
         omp_set_lock(&bucket_locks[slot]);
         bucket_push(&buckets[slot], v);
@@ -80,7 +80,6 @@ static void relax(float *dist, omp_lock_t *vertex_locks, bucket_t *buckets,
 static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, float *dist){
     bucket_t *buckets = ws->buckets;
     omp_lock_t *bucket_locks = ws->bucket_locks;
-    omp_lock_t *vertex_locks = ws->vertex_locks;
     uint32_t num_slots = ws->num_slots;
 
     uint32_t consecutive_empty = 0;
@@ -115,7 +114,7 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
                     if(w <= delta){
                         uint32_t v = g->col_idx[e];
                         float nd = dist[u] + w;
-                        relax(dist, vertex_locks, buckets, bucket_locks, num_slots, delta, v, nd);
+                        relax(dist, buckets, bucket_locks, num_slots, delta, v, nd);
                     }
                 }
             }
@@ -133,7 +132,7 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
                 if(w > delta){
                     uint32_t v = g->col_idx[e];
                     float nd = dist[u] + w;
-                    relax(dist, vertex_locks, buckets, bucket_locks, num_slots, delta, v, nd);
+                    relax(dist, buckets, bucket_locks, num_slots, delta, v, nd);
                 }
             }
         }
