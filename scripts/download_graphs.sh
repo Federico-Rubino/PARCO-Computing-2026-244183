@@ -33,7 +33,8 @@
 
 set -euo pipefail
 
-OUTPUT_DIR="../data"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OUTPUT_DIR="$SCRIPT_DIR/../data"
 FORCE=0
 
 log()  { printf '[%s] %s\n' "$(date +'%Y-%m-%d %H:%M:%S')" "$*" >&2; }

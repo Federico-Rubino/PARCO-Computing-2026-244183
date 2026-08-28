@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -N sssp_bench
+#PBS -l select=1:ncpus=64:mem=16gb
+#PBS -l walltime=02:00:00
+#PBS -q shortCPUQ
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10 run_experiments.pbs}"
+: "${UNDIRECTED:=0}"
+: "${DELTA:=10}"
+
+module load GCC/13.3.0
+
+make dsa dijkstra
+
+./scripts/run_experiments.sh "$GRAPH" "$UNDIRECTED" "$DELTA"
