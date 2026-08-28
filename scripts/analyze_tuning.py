@@ -17,6 +17,7 @@ from pathlib import Path
 
 DELTA_RE = re.compile(r"^(?P<graph>.+)_delta(?P<delta>[0-9.]+)\.csv$")
 SCHED_RE = re.compile(r"^(?P<graph>.+)_sched(?P<sched>.+)\.csv$")
+GRID_RE = re.compile(r"^(?P<graph>.+)_delta(?P<delta>[0-9.]+)_sched(?P<sched>.+)\.csv$")
 
 
 def read_times(path):
@@ -55,9 +56,49 @@ def collect_scheds(tuning_dir, gname):
     return results
 
 
+def collect_grid(tuning_dir, gname):
+    results = {}
+    for path in sorted(tuning_dir.glob(f"{gname}_delta*_sched*.csv")):
+        m = GRID_RE.match(path.name)
+        if not m:
+            continue
+        sched = m.group("sched").replace("_", ",")
+        results[(m.group("delta"), sched)] = mean_time(path)
+    return results
+
+
+def print_grid(gname, grid):
+    deltas = sorted({d for d, _ in grid}, key=float)
+    scheds = sorted({s for _, s in grid})
+
+    print(f"\n== {gname}: verification grid (mean_ms) ==")
+    print("delta".ljust(8) + "".join(s.ljust(16) for s in scheds))
+    for d in deltas:
+        row = d.ljust(8)
+        for s in scheds:
+            cell = grid.get((d, s))
+            row += (f"{cell[0]:.4f}" if cell else "-").ljust(16)
+        print(row)
+
+    best_cell = min(grid, key=lambda k: grid[k][0])
+    print(f"\nbest overall: delta={best_cell[0]} schedule={best_cell[1]} ({grid[best_cell][0]:.4f} ms)")
+
+    print("best schedule per delta:")
+    for d in deltas:
+        row_cells = {s: grid[(d, s)] for s in scheds if (d, s) in grid}
+        best_s = min(row_cells, key=lambda s: row_cells[s][0])
+        print(f"  delta={d}: {best_s} ({row_cells[best_s][0]:.4f} ms)")
+
+    print("best delta per schedule:")
+    for s in scheds:
+        col_cells = {d: grid[(d, s)] for d in deltas if (d, s) in grid}
+        best_d = min(col_cells, key=lambda d: col_cells[d][0])
+        print(f"  schedule={s}: delta={best_d} ({col_cells[best_d][0]:.4f} ms)")
+
+
 def main():
     if len(sys.argv) < 3:
-        sys.exit("usage: analyze_tuning.py <tuning_dir> <graph_name> [delta|schedule|all]")
+        sys.exit("usage: analyze_tuning.py <tuning_dir> <graph_name> [delta|schedule|grid|all]")
     tuning_dir = Path(sys.argv[1])
     gname = sys.argv[2]
     phase = sys.argv[3] if len(sys.argv) > 3 else "all"
@@ -75,6 +116,13 @@ def main():
         if not scheds:
             sys.exit(f"no schedule sweep results found for {gname} in {tuning_dir}")
         print(min(scheds, key=lambda k: scheds[k][0]))
+        return
+
+    if phase == "grid":
+        grid = collect_grid(tuning_dir, gname)
+        if not grid:
+            sys.exit(f"no grid results found for {gname} in {tuning_dir}")
+        print_grid(gname, grid)
         return
 
     row = "{:<12}{:>4}{:>12.4f}{:>10.4f}"
