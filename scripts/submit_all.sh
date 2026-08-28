@@ -9,6 +9,8 @@
 
 set -euo pipefail
 
+mkdir -p logs
+
 # graph_file  undirected  delta -- edit once the graphs are downloaded
 GRAPHS=(
     "data/roadNet-CA.txt        1  10"
@@ -20,6 +22,7 @@ GRAPHS=(
 for entry in "${GRAPHS[@]}"; do
     read -r graph undirected delta <<< "$entry"
     gname="$(basename "$graph" .txt)"
-    qsub -N "sssp_${gname}" -v GRAPH="$graph",UNDIRECTED="$undirected",DELTA="$delta" \
+    qsub -N "sssp_${gname}" -o "logs/${gname}.log" -e "logs/${gname}.err" \
+        -v GRAPH="$graph",UNDIRECTED="$undirected",DELTA="$delta" \
         scripts/run_experiments.pbs
 done

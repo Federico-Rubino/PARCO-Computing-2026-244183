@@ -3,6 +3,8 @@
 #PBS -l select=1:ncpus=64:mem=16gb
 #PBS -l walltime=02:00:00
 #PBS -q shortCPUQ
+#PBS -o logs/sssp_bench.log
+#PBS -e logs/sssp_bench.err
 
 set -euo pipefail
 cd "$PBS_O_WORKDIR"
