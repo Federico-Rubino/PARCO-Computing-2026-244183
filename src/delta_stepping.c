@@ -102,21 +102,32 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
             buckets[slot].count = 0;
             buckets[slot].capacity = 0;
 
-            #pragma omp parallel for schedule(dynamic, 64)
-            for(uint32_t i = 0; i < round_count; i++){
-                uint32_t u = round_nodes[i];
+            #pragma omp parallel
+            {
+                bucket_t local_settled = {0};
 
-                #pragma omp critical(settled_merge)
-                bucket_push(&ws->settled, u);
+                #pragma omp for schedule(dynamic, 64)
+                for(uint32_t i = 0; i < round_count; i++){
+                    uint32_t u = round_nodes[i];
 
-                for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
-                    float w = g->weights[e];
-                    if(w <= delta){
-                        uint32_t v = g->col_idx[e];
-                        float nd = dist[u] + w;
-                        relax(dist, buckets, bucket_locks, num_slots, delta, v, nd);
+                    bucket_push(&local_settled, u);
+
+                    for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
+                        float w = g->weights[e];
+                        if(w <= delta){
+                            uint32_t v = g->col_idx[e];
+                            float nd = dist[u] + w;
+                            relax(dist, buckets, bucket_locks, num_slots, delta, v, nd);
+                        }
                     }
                 }
+
+                // one lock acquisition per thread here, instead of one per vertex above
+                #pragma omp critical(settled_merge)
+                for(uint32_t i = 0; i < local_settled.count; i++)
+                    bucket_push(&ws->settled, local_settled.nodes[i]);
+
+                free(local_settled.nodes);
             }
             free(round_nodes);
         }
