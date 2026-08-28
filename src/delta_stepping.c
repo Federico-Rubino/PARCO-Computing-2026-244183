@@ -55,9 +55,8 @@ static void ds_reset(ds_workspace_t *ws, csr_graph_t *g, uint32_t source, float 
     bucket_push(&ws->buckets[0], source);
 }
 
-static void relax(float *dist, bucket_t *buckets,
-                  omp_lock_t *bucket_locks, uint32_t num_slots, float delta,
-                  uint32_t v, float nd){
+static void relax(float *dist, bucket_t *local_buckets, uint32_t num_slots,
+                  float delta, uint32_t v, float nd){
     if(nd >= dist[v]) return;
 
     float old_d;
@@ -70,10 +69,22 @@ static void relax(float *dist, bucket_t *buckets,
     }
 
     if(nd < old_d){
+        // thread-local, no lock: merged into the shared buckets once per
+        // thread per parallel region by merge_local_buckets()
         uint32_t slot = (uint32_t)(nd / delta) % num_slots;
-        omp_set_lock(&bucket_locks[slot]);
-        bucket_push(&buckets[slot], v);
-        omp_unset_lock(&bucket_locks[slot]);
+        bucket_push(&local_buckets[slot], v);
+    }
+}
+
+static void merge_local_buckets(bucket_t *buckets, omp_lock_t *bucket_locks,
+                                 bucket_t *local_buckets, uint32_t num_slots){
+    for(uint32_t s = 0; s < num_slots; s++){
+        if(local_buckets[s].count == 0) continue;
+        omp_set_lock(&bucket_locks[s]);
+        for(uint32_t i = 0; i < local_buckets[s].count; i++)
+            bucket_push(&buckets[s], local_buckets[s].nodes[i]);
+        omp_unset_lock(&bucket_locks[s]);
+        free(local_buckets[s].nodes);
     }
 }
 
@@ -105,6 +116,7 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
             #pragma omp parallel
             {
                 bucket_t local_settled = {0};
+                bucket_t *local_buckets = calloc(num_slots, sizeof(bucket_t));
 
                 #pragma omp for schedule(dynamic, 64)
                 for(uint32_t i = 0; i < round_count; i++){
@@ -117,7 +129,7 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
                         if(w <= delta){
                             uint32_t v = g->col_idx[e];
                             float nd = dist[u] + w;
-                            relax(dist, buckets, bucket_locks, num_slots, delta, v, nd);
+                            relax(dist, local_buckets, num_slots, delta, v, nd);
                         }
                     }
                 }
@@ -126,8 +138,10 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
                 #pragma omp critical(settled_merge)
                 for(uint32_t i = 0; i < local_settled.count; i++)
                     bucket_push(&ws->settled, local_settled.nodes[i]);
-
                 free(local_settled.nodes);
+
+                merge_local_buckets(buckets, bucket_locks, local_buckets, num_slots);
+                free(local_buckets);
             }
             free(round_nodes);
         }
@@ -135,17 +149,25 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
         uint32_t settled_count = ws->settled.count;
         uint32_t *settled_nodes = ws->settled.nodes;
 
-        #pragma omp parallel for schedule(dynamic, 64)
-        for(uint32_t i = 0; i < settled_count; i++){
-            uint32_t u = settled_nodes[i];
-            for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
-                float w = g->weights[e];
-                if(w > delta){
-                    uint32_t v = g->col_idx[e];
-                    float nd = dist[u] + w;
-                    relax(dist, buckets, bucket_locks, num_slots, delta, v, nd);
+        #pragma omp parallel
+        {
+            bucket_t *local_buckets = calloc(num_slots, sizeof(bucket_t));
+
+            #pragma omp for schedule(dynamic, 64)
+            for(uint32_t i = 0; i < settled_count; i++){
+                uint32_t u = settled_nodes[i];
+                for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
+                    float w = g->weights[e];
+                    if(w > delta){
+                        uint32_t v = g->col_idx[e];
+                        float nd = dist[u] + w;
+                        relax(dist, local_buckets, num_slots, delta, v, nd);
+                    }
                 }
             }
+
+            merge_local_buckets(buckets, bucket_locks, local_buckets, num_slots);
+            free(local_buckets);
         }
 
         b++;

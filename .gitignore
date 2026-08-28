@@ -5,3 +5,4 @@ logs/*
 !logs/.gitkeep
 *.o
 __pycache__/
+.venv/
