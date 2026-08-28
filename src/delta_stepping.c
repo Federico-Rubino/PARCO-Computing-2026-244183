@@ -118,7 +118,7 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
                 bucket_t local_settled = {0};
                 bucket_t *local_buckets = calloc(num_slots, sizeof(bucket_t));
 
-                #pragma omp for schedule(dynamic, 64)
+                #pragma omp for schedule(runtime)
                 for(uint32_t i = 0; i < round_count; i++){
                     uint32_t u = round_nodes[i];
 
@@ -153,7 +153,7 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
         {
             bucket_t *local_buckets = calloc(num_slots, sizeof(bucket_t));
 
-            #pragma omp for schedule(dynamic, 64)
+            #pragma omp for schedule(runtime)
             for(uint32_t i = 0; i < settled_count; i++){
                 uint32_t u = settled_nodes[i];
                 for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){

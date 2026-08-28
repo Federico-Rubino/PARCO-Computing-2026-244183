@@ -23,6 +23,7 @@ mkdir -p results/bench results/ground_truth
 
 export OMP_PLACES=cores
 export OMP_PROC_BIND=close
+export OMP_SCHEDULE="dynamic,64"
 
 if [ ! -f "$GT_DIST" ]; then
     echo "== Dijkstra ground truth: $GNAME =="
