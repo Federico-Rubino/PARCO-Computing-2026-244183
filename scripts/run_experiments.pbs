@@ -17,6 +17,14 @@ SCHEDULE="${SCHEDULE//_/,}"   # qsub -v splits on comma, so it arrives underscor
 
 module load GCC/13.3.0
 
-make dsa dijkstra
+# built once, before submitting -- never rebuild here: with several of
+# these jobs running concurrently, each doing "make" would race on the
+# same shared bin/dsa and bin/dijkstra files (seen in practice as a
+# linker "Stale file handle" in one job and a segfault, from the binary
+# being overwritten mid-execution, in another)
+[ -x bin/dsa ] && [ -x bin/dijkstra ] || {
+    echo "bin/dsa or bin/dijkstra missing/not executable -- run 'make dsa dijkstra' once, before submitting, not inside the job" >&2
+    exit 1
+}
 
 ./scripts/run_experiments.sh "$GRAPH" "$UNDIRECTED" "$DELTA" "$SCHEDULE"
