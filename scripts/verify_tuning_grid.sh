@@ -45,7 +45,7 @@ for D in "${DELTAS[@]}"; do
         DIST_OUT="$OUT_DIR/${GNAME}_delta${D}_sched${TAG}_dist.txt"
 
         echo "-> delta=$D schedule=$S"
-        ./bin/dsa "$GRAPH" "$UNDIRECTED" 0 "$D" "$WARMUP_RUNS" "$NUM_RUNS" \
+        ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$D" "$WARMUP_RUNS" "$NUM_RUNS" \
             "$CSV_OUT" "$DIST_OUT"
 
         python3 scripts/compare_dist.py --quiet "$GT_DIST" "$DIST_OUT"

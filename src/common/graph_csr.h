@@ -14,5 +14,6 @@ typedef struct {
 
 int load_csr(const char *filename, csr_graph_t *graph, int undirected);
 void free_csr(csr_graph_t *graph);
+uint32_t max_out_degree_vertex(csr_graph_t *graph);
 
 #endif //__GRAPH_CSR_H__

@@ -2,6 +2,7 @@
 #include <omp.h>
 #include <math.h>
 #include <inttypes.h>
+#include <string.h>
 
 typedef struct {
     uint32_t *nodes;
@@ -176,12 +177,12 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
 
 int main(int argc, char **argv){
     if(argc < 2){
-        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=0] [delta=10] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
+        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=auto] [delta=10] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
         return 1;
     }
     const char *filename = argv[1];
     int undirected = argc > 2 ? atoi(argv[2]) : 0;
-    uint32_t source = argc > 3 ? (uint32_t)strtoul(argv[3], NULL, 10) : 0;
+    const char *source_arg = argc > 3 ? argv[3] : "auto";
     float delta = argc > 4 ? (float)atof(argv[4]) : 10.0f;
     int warmup_runs = argc > 5 ? atoi(argv[5]) : 5;
     int num_runs = argc > 6 ? atoi(argv[6]) : 10;
@@ -192,6 +193,14 @@ int main(int argc, char **argv){
     if(load_csr(filename, &g, undirected) != 0){
         fprintf(stderr, "failed to load %s\n", filename);
         return 1;
+    }
+
+    uint32_t source;
+    if(strcmp(source_arg, "auto") == 0){
+        source = max_out_degree_vertex(&g);
+        fprintf(stderr, "source: auto -> vertex %u\n", source);
+    } else {
+        source = (uint32_t)strtoul(source_arg, NULL, 10);
     }
 
     float *dist = malloc(g.num_vertices * sizeof(float));

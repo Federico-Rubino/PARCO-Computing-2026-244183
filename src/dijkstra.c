@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include <inttypes.h>
+#include <string.h>
 
 typedef struct {
     float dist;
@@ -71,12 +72,12 @@ static double now_sec(void){
 
 int main(int argc, char **argv){
     if(argc < 2){
-        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=0] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
+        fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=auto] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
         return 1;
     }
     const char *filename = argv[1];
     int undirected = argc > 2 ? atoi(argv[2]) : 0;
-    uint32_t source = argc > 3 ? (uint32_t)strtoul(argv[3], NULL, 10) : 0;
+    const char *source_arg = argc > 3 ? argv[3] : "auto";
     int warmup_runs = argc > 4 ? atoi(argv[4]) : 5;
     int num_runs = argc > 5 ? atoi(argv[5]) : 10;
     const char *csv_out = argc > 6 ? argv[6] : NULL;
@@ -86,6 +87,14 @@ int main(int argc, char **argv){
     if(load_csr(filename, &g, undirected) != 0){
         fprintf(stderr, "failed to load %s\n", filename);
         return 1;
+    }
+
+    uint32_t source;
+    if(strcmp(source_arg, "auto") == 0){
+        source = max_out_degree_vertex(&g);
+        fprintf(stderr, "source: auto -> vertex %u\n", source);
+    } else {
+        source = (uint32_t)strtoul(source_arg, NULL, 10);
     }
 
     float *dist = malloc(g.num_vertices * sizeof(float));

@@ -35,7 +35,7 @@ export OMP_SCHEDULE="$SCHEDULE"
 
 if [ ! -f "$GT_DIST" ]; then
     echo "== Dijkstra ground truth: $GNAME =="
-    ./bin/dijkstra "$GRAPH" "$UNDIRECTED" 0 "$WARMUP_RUNS" "$NUM_RUNS" \
+    ./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto "$WARMUP_RUNS" "$NUM_RUNS" \
         "$BENCH_DIR/dijkstra.csv" "$GT_DIST"
 fi
 
@@ -46,7 +46,7 @@ for D in "${DELTAS[@]}"; do
     DIST_OUT="$OUT_DIR/${GNAME}_delta${D}_dist.txt"
 
     echo "-> delta: $D"
-    ./bin/dsa "$GRAPH" "$UNDIRECTED" 0 "$D" "$WARMUP_RUNS" "$NUM_RUNS" \
+    ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$D" "$WARMUP_RUNS" "$NUM_RUNS" \
         "$CSV_OUT" "$DIST_OUT"
 
     python3 scripts/compare_dist.py --quiet "$GT_DIST" "$DIST_OUT"
