@@ -3,6 +3,8 @@ data/*
 !data/.gitkeep
 logs/*
 !logs/.gitkeep
+results/ground_truth/*
+!results/ground_truth/.gitkeep
 *.o
 __pycache__/
 .venv/

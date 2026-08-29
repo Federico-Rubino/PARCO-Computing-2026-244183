@@ -50,20 +50,20 @@ def summarize(times):
     }
 
 
-def load_dijkstra(bench_dir, gname):
-    path = bench_dir / f"{gname}_dijkstra.csv"
+def load_dijkstra(bench_dir):
+    path = bench_dir / "dijkstra.csv"
     if not path.exists():
         sys.exit(f"missing {path}")
     return summarize(read_times(path))
 
 
-def load_dsa(bench_dir, gname):
+def load_dsa(bench_dir):
     per_thread = {}
-    for path in sorted(bench_dir.glob(f"{gname}_dsa_t*.csv")):
+    for path in sorted(bench_dir.glob("dsa_t*.csv")):
         threads = int(path.stem.rsplit("_t", 1)[1])
         per_thread[threads] = summarize(read_times(path))
     if not per_thread:
-        sys.exit(f"no {gname}_dsa_t*.csv files found in {bench_dir}")
+        sys.exit(f"no dsa_t*.csv files found in {bench_dir}")
     return dict(sorted(per_thread.items()))
 
 
@@ -166,14 +166,14 @@ def plot_efficiency(gname, dijkstra_stats, dsa_stats, out_dir):
 
 def main():
     if len(sys.argv) < 2:
-        sys.exit("usage: plot_results.py <graph_name> [bench_dir=results/bench] [out_dir=results/plots]")
+        sys.exit("usage: plot_results.py <graph_name> [bench_dir=results/bench/<graph_name>] [out_dir=results/plots]")
     gname = sys.argv[1]
-    bench_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("results/bench")
+    bench_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("results/bench") / gname
     out_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("results/plots")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    dijkstra_stats = load_dijkstra(bench_dir, gname)
-    dsa_stats = load_dsa(bench_dir, gname)
+    dijkstra_stats = load_dijkstra(bench_dir)
+    dsa_stats = load_dsa(bench_dir)
 
     print_table(gname, dijkstra_stats, dsa_stats)
     write_summary_csv(out_dir / f"{gname}_summary.csv", gname, dijkstra_stats, dsa_stats)

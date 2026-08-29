@@ -9,12 +9,14 @@
 set -euo pipefail
 cd "$PBS_O_WORKDIR"
 
-: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10 run_experiments.pbs}"
+: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10,SCHEDULE=dynamic_64 run_experiments.pbs}"
 : "${UNDIRECTED:=0}"
 : "${DELTA:=10}"
+: "${SCHEDULE:=dynamic_64}"
+SCHEDULE="${SCHEDULE//_/,}"   # qsub -v splits on comma, so it arrives underscore-encoded
 
 module load GCC/13.3.0
 
 make dsa dijkstra
 
-./scripts/run_experiments.sh "$GRAPH" "$UNDIRECTED" "$DELTA"
+./scripts/run_experiments.sh "$GRAPH" "$UNDIRECTED" "$DELTA" "$SCHEDULE"

@@ -1,3 +1,4 @@
-https://snap.stanford.edu/data/web-Google.txt.gz
 https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz
 https://snap.stanford.edu/data/soc-LiveJournal1.txt.gz
+https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz
+https://snap.stanford.edu/data/cit-Patents.txt.gz
