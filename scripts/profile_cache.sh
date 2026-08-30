@@ -31,6 +31,7 @@ valgrind --tool=cachegrind --cache-sim=yes \
     --cachegrind-out-file="$OUT_DIR/${GNAME}_dijkstra.out" \
     ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
     > /dev/null 2> "$OUT_DIR/${GNAME}_dijkstra.log"
+rm -f "$OUT_DIR/${GNAME}_dijkstra.out"
 
 echo "== Delta-stepping cache profile: $GNAME (delta=$DELTA) =="
 for T in "${THREADS[@]}"; do
@@ -40,6 +41,7 @@ for T in "${THREADS[@]}"; do
         --cachegrind-out-file="$OUT_DIR/${GNAME}_dsa_t${T}.out" \
         ./bin/dsa_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
         > /dev/null 2> "$OUT_DIR/${GNAME}_dsa_t${T}.log"
+    rm -f "$OUT_DIR/${GNAME}_dsa_t${T}.out"
 done
 
 echo "== done: logs in $OUT_DIR/ =="
