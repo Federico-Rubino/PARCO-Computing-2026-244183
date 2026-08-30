@@ -49,13 +49,13 @@ for RR in 1 0; do
     echo "-> dijkstra, RABBIT_REORDER=$RR (cache)"
     valgrind --tool=cachegrind \
         --cachegrind-out-file="$OUT_DIR/dijkstra_${TAG}.out" \
-        ./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto 0 1 \
+        ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
         > /dev/null 2> "$OUT_DIR/dijkstra_${TAG}.log"
 
     echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (cache)"
     valgrind --tool=cachegrind \
         --cachegrind-out-file="$OUT_DIR/dsa_t${THREADS}_${TAG}.out" \
-        ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
+        ./bin/dsa_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
         > /dev/null 2> "$OUT_DIR/dsa_t${THREADS}_${TAG}.log"
 done
 

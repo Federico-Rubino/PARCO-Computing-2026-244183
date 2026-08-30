@@ -29,7 +29,7 @@ command -v valgrind >/dev/null 2>&1 || { echo "valgrind not found in PATH" >&2; 
 echo "== Dijkstra cache profile: $GNAME =="
 valgrind --tool=cachegrind \
     --cachegrind-out-file="$OUT_DIR/${GNAME}_dijkstra.out" \
-    ./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto 0 1 \
+    ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
     > /dev/null 2> "$OUT_DIR/${GNAME}_dijkstra.log"
 
 echo "== Delta-stepping cache profile: $GNAME (delta=$DELTA) =="
@@ -38,7 +38,7 @@ for T in "${THREADS[@]}"; do
     echo "-> threads: $T"
     valgrind --tool=cachegrind \
         --cachegrind-out-file="$OUT_DIR/${GNAME}_dsa_t${T}.out" \
-        ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
+        ./bin/dsa_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
         > /dev/null 2> "$OUT_DIR/${GNAME}_dsa_t${T}.log"
 done
 
