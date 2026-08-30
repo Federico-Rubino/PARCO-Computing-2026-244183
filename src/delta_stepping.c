@@ -23,6 +23,9 @@ typedef struct {
     omp_lock_t *bucket_locks;
     bucket_t settled;
     uint32_t num_slots;
+    int num_threads;
+    bucket_t *thread_settled;   // [num_threads]
+    bucket_t **thread_buckets;  // [num_threads][num_slots]
 } ds_workspace_t;
 
 static void ds_workspace_init(ds_workspace_t *ws, csr_graph_t *g, float delta){
@@ -39,6 +42,12 @@ static void ds_workspace_init(ds_workspace_t *ws, csr_graph_t *g, float delta){
     for(uint32_t i = 0; i < ws->num_slots; i++) omp_init_lock(&ws->bucket_locks[i]);
 
     ws->settled = (bucket_t){0};
+
+    ws->num_threads = omp_get_max_threads();
+    ws->thread_settled = calloc(ws->num_threads, sizeof(bucket_t));
+    ws->thread_buckets = malloc(ws->num_threads * sizeof(bucket_t*));
+    for(int t = 0; t < ws->num_threads; t++)
+        ws->thread_buckets[t] = calloc(ws->num_slots, sizeof(bucket_t));
 }
 
 static void ds_workspace_free(ds_workspace_t *ws, csr_graph_t *g){
@@ -47,6 +56,14 @@ static void ds_workspace_free(ds_workspace_t *ws, csr_graph_t *g){
     free(ws->buckets);
     free(ws->bucket_locks);
     free(ws->settled.nodes);
+
+    for(int t = 0; t < ws->num_threads; t++){
+        free(ws->thread_settled[t].nodes);
+        for(uint32_t s = 0; s < ws->num_slots; s++) free(ws->thread_buckets[t][s].nodes);
+        free(ws->thread_buckets[t]);
+    }
+    free(ws->thread_settled);
+    free(ws->thread_buckets);
 }
 
 static void ds_reset(ds_workspace_t *ws, csr_graph_t *g, uint32_t source, float *dist){
@@ -85,7 +102,7 @@ static void merge_local_buckets(bucket_t *buckets, omp_lock_t *bucket_locks,
         for(uint32_t i = 0; i < local_buckets[s].count; i++)
             bucket_push(&buckets[s], local_buckets[s].nodes[i]);
         omp_unset_lock(&bucket_locks[s]);
-        free(local_buckets[s].nodes);
+        local_buckets[s].count = 0; // reused next round, keep the buffer allocated
     }
 }
 
@@ -116,14 +133,17 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
 
             #pragma omp parallel
             {
-                bucket_t local_settled = {0};
-                bucket_t *local_buckets = calloc(num_slots, sizeof(bucket_t));
+                int tid = omp_get_thread_num();
+                bucket_t *local_settled = &ws->thread_settled[tid];
+                bucket_t *local_buckets = ws->thread_buckets[tid];
+                local_settled->count = 0;
+                for(uint32_t s = 0; s < num_slots; s++) local_buckets[s].count = 0;
 
                 #pragma omp for schedule(runtime)
                 for(uint32_t i = 0; i < round_count; i++){
                     uint32_t u = round_nodes[i];
 
-                    bucket_push(&local_settled, u);
+                    bucket_push(local_settled, u);
 
                     for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
                         float w = g->weights[e];
@@ -137,12 +157,10 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
 
                 // one lock acquisition per thread here, instead of one per vertex above
                 #pragma omp critical(settled_merge)
-                for(uint32_t i = 0; i < local_settled.count; i++)
-                    bucket_push(&ws->settled, local_settled.nodes[i]);
-                free(local_settled.nodes);
+                for(uint32_t i = 0; i < local_settled->count; i++)
+                    bucket_push(&ws->settled, local_settled->nodes[i]);
 
                 merge_local_buckets(buckets, bucket_locks, local_buckets, num_slots);
-                free(local_buckets);
             }
             free(round_nodes);
         }
@@ -152,7 +170,9 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
 
         #pragma omp parallel
         {
-            bucket_t *local_buckets = calloc(num_slots, sizeof(bucket_t));
+            int tid = omp_get_thread_num();
+            bucket_t *local_buckets = ws->thread_buckets[tid];
+            for(uint32_t s = 0; s < num_slots; s++) local_buckets[s].count = 0;
 
             #pragma omp for schedule(runtime)
             for(uint32_t i = 0; i < settled_count; i++){
@@ -168,7 +188,6 @@ static void delta_stepping(csr_graph_t *g, ds_workspace_t *ws, float delta, floa
             }
 
             merge_local_buckets(buckets, bucket_locks, local_buckets, num_slots);
-            free(local_buckets);
         }
 
         b++;

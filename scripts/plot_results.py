@@ -114,7 +114,7 @@ def plot_time(gname, dsa_stats, out_dir):
     style_axes(ax)
     ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(out_dir / f"{gname}_time.png", dpi=200)
+    fig.savefig(out_dir / "time.png", dpi=200)
     plt.close(fig)
 
 
@@ -137,7 +137,7 @@ def plot_speedup(gname, dijkstra_stats, dsa_stats, out_dir):
     style_axes(ax)
     ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(out_dir / f"{gname}_speedup.png", dpi=200)
+    fig.savefig(out_dir / "speedup.png", dpi=200)
     plt.close(fig)
 
 
@@ -160,23 +160,23 @@ def plot_efficiency(gname, dijkstra_stats, dsa_stats, out_dir):
     style_axes(ax)
     ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(out_dir / f"{gname}_efficiency.png", dpi=200)
+    fig.savefig(out_dir / "efficiency.png", dpi=200)
     plt.close(fig)
 
 
 def main():
     if len(sys.argv) < 2:
-        sys.exit("usage: plot_results.py <graph_name> [bench_dir=results/bench/<graph_name>] [out_dir=results/plots]")
+        sys.exit("usage: plot_results.py <graph_name> [bench_dir=results/bench/<graph_name>] [out_dir=results/plots/<graph_name>]")
     gname = sys.argv[1]
     bench_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("results/bench") / gname
-    out_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("results/plots")
+    out_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("results/plots") / gname
     out_dir.mkdir(parents=True, exist_ok=True)
 
     dijkstra_stats = load_dijkstra(bench_dir)
     dsa_stats = load_dsa(bench_dir)
 
     print_table(gname, dijkstra_stats, dsa_stats)
-    write_summary_csv(out_dir / f"{gname}_summary.csv", gname, dijkstra_stats, dsa_stats)
+    write_summary_csv(out_dir / "summary.csv", gname, dijkstra_stats, dsa_stats)
 
     plot_time(gname, dsa_stats, out_dir)
     plot_speedup(gname, dijkstra_stats, dsa_stats, out_dir)
