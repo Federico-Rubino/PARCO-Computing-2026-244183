@@ -6,7 +6,7 @@
 # one run per configuration is enough - no warmup, no repetition.
 #
 # Usage:
-#   ./scripts/profile_cache.sh [graph_file] [undirected=0] [delta=10.0]
+#   ./scripts/profile_cache.sh [graph_file] [undirected=0] [delta=10.0] [schedule=dynamic,256]
 #
 
 set -euo pipefail
@@ -14,12 +14,15 @@ set -euo pipefail
 GRAPH="${1:-data/web-Google.txt}"
 UNDIRECTED="${2:-0}"
 DELTA="${3:-10.0}"
+SCHEDULE="${4:-dynamic,256}"
 THREADS=(1 4 16 64)
 
 GNAME="$(basename "$GRAPH" .txt)"
 OUT_DIR="results/cache"
 
 mkdir -p "$OUT_DIR"
+
+export OMP_SCHEDULE="$SCHEDULE"
 
 command -v valgrind >/dev/null 2>&1 || { echo "valgrind not found in PATH" >&2; exit 1; }
 
