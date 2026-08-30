@@ -47,13 +47,13 @@ for RR in 1 0; do
         "$OUT_DIR/dsa_t${THREADS}_${TAG}.csv"
 
     echo "-> dijkstra, RABBIT_REORDER=$RR (cache)"
-    valgrind --tool=cachegrind \
+    valgrind --tool=cachegrind --cache-sim=yes \
         --cachegrind-out-file="$OUT_DIR/dijkstra_${TAG}.out" \
         ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
         > /dev/null 2> "$OUT_DIR/dijkstra_${TAG}.log"
 
     echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (cache)"
-    valgrind --tool=cachegrind \
+    valgrind --tool=cachegrind --cache-sim=yes \
         --cachegrind-out-file="$OUT_DIR/dsa_t${THREADS}_${TAG}.out" \
         ./bin/dsa_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
         > /dev/null 2> "$OUT_DIR/dsa_t${THREADS}_${TAG}.log"
