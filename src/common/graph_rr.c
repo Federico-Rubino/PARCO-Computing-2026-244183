@@ -84,7 +84,7 @@ int compute_rabbit_order(csr_graph_t *origin, uint32_t *perm, uint32_t *inv_perm
     // Community aggregation based on modularity gain delta Q
     for(uint64_t idx = 0; idx < n; idx++){
         uint32_t u = ordered_nodes[idx];
-        uint64_t deg_u = origin->row_ptr[u + 1] - origin->row_ptr[u];
+        uint64_t deg_u = atoms[u].degree; // current accumulated degree, not the raw original one
         if(deg_u == 0) continue;
 
         uint32_t best_c = UINT32_MAX;
@@ -94,6 +94,10 @@ int compute_rabbit_order(csr_graph_t *origin, uint32_t *perm, uint32_t *inv_perm
             uint32_t v = origin->col_idx[e];
             uint32_t cv = community[v];
             if(cv == community[u]) continue;
+            // only merge into a strictly larger community: without this, every
+            // vertex (hubs included) finds some positive-gain neighbor and
+            // merges away, leaving no stable roots for the dendrogram at all
+            if(atoms[cv].degree <= deg_u) continue;
 
             float gain = compute_delta_q(deg_u, atoms[cv].degree, m, origin->weights[e]);
             if(gain > best_gain){

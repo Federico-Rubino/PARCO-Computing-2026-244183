@@ -1,4 +1,5 @@
 #include "common/graph_csr.h"
+#include "common/graph_rr.h"
 #include <omp.h>
 #include <math.h>
 #include <inttypes.h>
@@ -212,6 +213,17 @@ int main(int argc, char **argv){
     if(load_csr(filename, &g, undirected) != 0){
         fprintf(stderr, "failed to load %s\n", filename);
         return 1;
+    }
+
+    const char *rr_env = getenv("RABBIT_REORDER");
+    if(!(rr_env && strcmp(rr_env, "0") == 0)){
+        csr_graph_t reordered;
+        if(csr_rabbit_order(&g, &reordered, NULL, NULL) == 0){
+            free_csr(&g);
+            g = reordered;
+        } else {
+            fprintf(stderr, "warning: rabbit reordering failed, using original order\n");
+        }
     }
 
     uint32_t source;
