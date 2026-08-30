@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -N rr_compare
+#PBS -l select=1:ncpus=64:mem=64gb
+#PBS -l walltime=05:00:00
+#PBS -q shortCPUQ
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10,SCHEDULE=dynamic_256,THREADS=32 profile_rr_compare.pbs}"
+: "${UNDIRECTED:=0}"
+: "${DELTA:=10}"
+: "${SCHEDULE:=dynamic_256}"
+: "${THREADS:=32}"
+SCHEDULE="${SCHEDULE//_/,}"   # qsub -v splits on comma, so it arrives underscore-encoded
+
+module load GCC/13.3.0
+
+# built once, before submitting -- never rebuild here, same reasoning as
+# run_experiments.pbs/profile_cache.pbs: concurrent jobs rebuilding the
+# same shared binaries race and can corrupt each other's runs
+[ -x bin/dsa ] && [ -x bin/dijkstra ] && [ -x bin/dsa_prof ] && [ -x bin/dijkstra_prof ] || {
+    echo "one of bin/dsa, bin/dijkstra, bin/dsa_prof, bin/dijkstra_prof is missing/not executable -- run 'make dsa dijkstra dsa_prof dijkstra_prof' once, before submitting, not inside the job" >&2
+    exit 1
+}
+
+./scripts/profile_rr_compare.sh "$GRAPH" "$UNDIRECTED" "$DELTA" "$SCHEDULE" "$THREADS"

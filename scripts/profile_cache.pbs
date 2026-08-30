@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -N cache_profile
+#PBS -l select=1:ncpus=64:mem=64gb
+#PBS -l walltime=08:00:00
+#PBS -q commonCPUQ
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+
+: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10 profile_cache.pbs}"
+: "${UNDIRECTED:=0}"
+: "${DELTA:=10}"
+
+module load GCC/13.3.0
+
+# built once, before submitting -- never rebuild here, same reasoning as
+# run_experiments.pbs: concurrent jobs rebuilding the same shared binaries
+# race and can corrupt each other's runs
+[ -x bin/dsa_prof ] && [ -x bin/dijkstra_prof ] || {
+    echo "bin/dsa_prof or bin/dijkstra_prof missing/not executable -- run 'make dsa_prof dijkstra_prof' once, before submitting, not inside the job" >&2
+    exit 1
+}
+
+./scripts/profile_cache.sh "$GRAPH" "$UNDIRECTED" "$DELTA"
