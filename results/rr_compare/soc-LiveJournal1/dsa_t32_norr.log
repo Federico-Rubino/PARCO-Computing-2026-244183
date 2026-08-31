@@ -1,0 +1,23 @@
+==2275217== Cachegrind, a high-precision tracing profiler
+==2275217== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==2275217== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==2275217== Command: ./bin/dsa_prof data/soc-LiveJournal1.txt 0 auto 5 0 1
+==2275217== 
+--2275217-- warning: L3 cache found, using its data for the LL simulation.
+source: auto -> vertex 10009
+==2275217== 
+==2275217== I refs:        299,281,757,003
+==2275217== I1  misses:              3,202
+==2275217== LLi misses:              3,008
+==2275217== I1  miss rate:            0.00%
+==2275217== LLi miss rate:            0.00%
+==2275217== 
+==2275217== D refs:        104,328,613,333  (65,188,083,264 rd   + 39,140,530,069 wr)
+==2275217== D1  misses:        232,404,137  (   198,116,719 rd   +     34,287,418 wr)
+==2275217== LLd misses:        124,222,704  (    90,343,211 rd   +     33,879,493 wr)
+==2275217== D1  miss rate:             0.2% (           0.3%     +            0.1%  )
+==2275217== LLd miss rate:             0.1% (           0.1%     +            0.1%  )
+==2275217== 
+==2275217== LL refs:           232,407,339  (   198,119,921 rd   +     34,287,418 wr)
+==2275217== LL misses:         124,225,712  (    90,346,219 rd   +     33,879,493 wr)
+==2275217== LL miss rate:              0.0% (           0.0%     +            0.1%  )

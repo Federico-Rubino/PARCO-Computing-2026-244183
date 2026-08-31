@@ -1,0 +1,26 @@
+==3259573== Cachegrind, a high-precision tracing profiler
+==3259573== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==3259573== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==3259573== Command: ./bin/dijkstra_prof data/com-orkut.ungraph.txt 1 auto 0 1
+==3259573== 
+--3259573-- warning: L3 cache found, using its data for the LL simulation.
+==3259573== brk segment overflow in thread #1: can't grow to 0x4c13000
+==3259573== (see section Limitations in user manual)
+==3259573== NOTE: further instances of this message will not be shown
+source: auto -> vertex 660769
+==3259573== 
+==3259573== I refs:        503,167,482,733
+==3259573== I1  misses:              2,092
+==3259573== LLi misses:              2,080
+==3259573== I1  miss rate:            0.00%
+==3259573== LLi miss rate:            0.00%
+==3259573== 
+==3259573== D refs:        178,839,425,554  (110,510,845,425 rd   + 68,328,580,129 wr)
+==3259573== D1  misses:      1,512,190,151  (  1,176,482,614 rd   +    335,707,537 wr)
+==3259573== LLd misses:        413,542,119  (    225,507,473 rd   +    188,034,646 wr)
+==3259573== D1  miss rate:             0.8% (            1.1%     +            0.5%  )
+==3259573== LLd miss rate:             0.2% (            0.2%     +            0.3%  )
+==3259573== 
+==3259573== LL refs:         1,512,192,243  (  1,176,484,706 rd   +    335,707,537 wr)
+==3259573== LL misses:         413,544,199  (    225,509,553 rd   +    188,034,646 wr)
+==3259573== LL miss rate:              0.1% (            0.0%     +            0.3%  )
