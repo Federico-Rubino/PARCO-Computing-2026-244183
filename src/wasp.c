@@ -9,6 +9,7 @@
 #include <sched.h>
 
 #define WASP_IDLE INT32_MAX
+#define WASP_CHUNK_SIZE 64
 
 typedef struct {
     uint32_t *nodes;
@@ -235,30 +236,40 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
             }
         }
 
-        omp_set_lock(&self->lock);
-        bucket_t round = self->current;
-        self->current = (bucket_t){0};
-        omp_unset_lock(&self->lock);
-
         int prio = self->curr_prio;
-        self->stage.count = 0;
 
-        for(uint32_t i = 0; i < round.count; i++){
-            uint32_t u = round.nodes[i];
-            if(dist[u] < prio * delta) continue; // stale: a better path already moved u to an earlier bucket
+        // small chunks at a time, so current stays mostly stealable
+        for(;;){
+            uint32_t chunk[WASP_CHUNK_SIZE];
+            uint32_t chunk_n;
 
-            for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
-                uint32_t v = g->col_idx[e];
-                float nd = dist[u] + g->weights[e];
-                wasp_relax(dist, self, prio, delta, v, nd);
-            }
-        }
-        free(round.nodes);
-
-        if(self->stage.count > 0){
             omp_set_lock(&self->lock);
-            for(uint32_t i = 0; i < self->stage.count; i++) bucket_push(&self->current, self->stage.nodes[i]);
+            chunk_n = self->current.count < WASP_CHUNK_SIZE ? self->current.count : WASP_CHUNK_SIZE;
+            for(uint32_t i = 0; i < chunk_n; i++) chunk[i] = self->current.nodes[i];
+            uint32_t remaining = self->current.count - chunk_n;
+            memmove(self->current.nodes, self->current.nodes + chunk_n, remaining * sizeof(uint32_t));
+            self->current.count = remaining;
             omp_unset_lock(&self->lock);
+
+            if(chunk_n == 0) break;
+
+            self->stage.count = 0;
+            for(uint32_t i = 0; i < chunk_n; i++){
+                uint32_t u = chunk[i];
+                if(dist[u] < prio * delta) continue; // stale: a better path already moved u to an earlier bucket
+
+                for(uint64_t e = g->row_ptr[u]; e < g->row_ptr[u + 1]; e++){
+                    uint32_t v = g->col_idx[e];
+                    float nd = dist[u] + g->weights[e];
+                    wasp_relax(dist, self, prio, delta, v, nd);
+                }
+            }
+
+            if(self->stage.count > 0){
+                omp_set_lock(&self->lock);
+                for(uint32_t i = 0; i < self->stage.count; i++) bucket_push(&self->current, self->stage.nodes[i]);
+                omp_unset_lock(&self->lock);
+            }
         }
     }
 }
