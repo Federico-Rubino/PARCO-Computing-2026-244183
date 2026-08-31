@@ -1,15 +1,16 @@
 #!/bin/bash
 #PBS -N cache_profile
 #PBS -l select=1:ncpus=64:mem=64gb
-#PBS -l walltime=08:00:00
-#PBS -q commonCPUQ
+#PBS -l walltime=05:00:00
+#PBS -q shortCPUQ
 
 set -euo pipefail
 cd "$PBS_O_WORKDIR"
 
-: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10 profile_cache.pbs}"
+: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10,ALGO=dsa profile_cache.pbs}"
 : "${UNDIRECTED:=0}"
 : "${DELTA:=10}"
+: "${ALGO:=all}"
 
 module load GCC/13.3.0
 
@@ -21,4 +22,4 @@ module load GCC/13.3.0
     exit 1
 }
 
-./scripts/profile_cache.sh "$GRAPH" "$UNDIRECTED" "$DELTA"
+./scripts/profile_cache.sh "$GRAPH" "$UNDIRECTED" "$DELTA" "dynamic,256" "$ALGO"

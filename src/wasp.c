@@ -1,9 +1,12 @@
+#define _POSIX_C_SOURCE 200809L
 #include "common/graph_csr.h"
 #include "common/graph_rr.h"
 #include <omp.h>
 #include <math.h>
 #include <inttypes.h>
 #include <string.h>
+#include <time.h>
+#include <sched.h>
 
 #define WASP_IDLE INT32_MAX
 
@@ -113,10 +116,26 @@ static int wasp_find_next_local(wasp_thread_t *th){
     return -1;
 }
 
-// steals half of a victim's current bucket, round robin over peers
+static unsigned int wasp_xorshift(unsigned int *state){
+    *state ^= *state << 13;
+    *state ^= *state >> 17;
+    *state ^= *state << 5;
+    return *state;
+}
+
+// steals half of a victim's bucket; random start avoids piling on one victim
 static int wasp_try_steal(wasp_thread_t *threads, int nthreads, int self,
                            bucket_t *out, int *out_prio){
-    for(int off = 1; off < nthreads; off++){
+    if(nthreads < 2) return 0;
+
+    static __thread unsigned int rng_state = 0;
+    if(rng_state == 0) rng_state = (unsigned int)(self * 2654435761u + 1u);
+
+    int span = nthreads - 1;
+    int start = 1 + (int)(wasp_xorshift(&rng_state) % (unsigned int)span);
+
+    for(int i = 0; i < span; i++){
+        int off = 1 + (start - 1 + i) % span;
         int v = (self + off) % nthreads;
         int prio_v;
         #pragma omp atomic read
@@ -139,6 +158,19 @@ static int wasp_try_steal(wasp_thread_t *threads, int nthreads, int self,
         return 1;
     }
     return 0;
+}
+
+// yield, then sleep with growing delay, capped at 1ms
+static void wasp_backoff(int *tier){
+    if(*tier < 4){
+        sched_yield();
+    } else {
+        long ns = 1000L << (*tier - 4);
+        if(ns > 1000000L) ns = 1000000L;
+        struct timespec ts = {0, ns};
+        nanosleep(&ts, NULL);
+    }
+    if(*tier < 20) (*tier)++;
 }
 
 static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *dist, float delta){
@@ -178,6 +210,7 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
                     { ws->active_count--; active = ws->active_count; }
                     if(active == 0) return;
 
+                    int backoff_tier = 0;
                     for(;;){
                         #pragma omp atomic read
                         active = ws->active_count;
@@ -195,6 +228,7 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
                             free(stolen.nodes);
                             break;
                         }
+                        wasp_backoff(&backoff_tier);
                     }
                 }
                 continue;
