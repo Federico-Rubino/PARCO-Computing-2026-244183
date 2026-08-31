@@ -7,10 +7,12 @@
 set -euo pipefail
 cd "$PBS_O_WORKDIR"
 
-: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10,ALGO=dsa profile_cache.pbs}"
+: "${GRAPH:?set via: qsub -v GRAPH=data/foo.txt,UNDIRECTED=0,DELTA=10,ALGO=dsa,THREADS=1_4 profile_cache.pbs}"
 : "${UNDIRECTED:=0}"
 : "${DELTA:=10}"
 : "${ALGO:=all}"
+: "${THREADS:=1_4_16_64}"
+THREADS="${THREADS//_/,}"   # qsub -v splits on comma, so it arrives underscore-encoded
 
 module load GCC/13.3.0
 
@@ -22,4 +24,4 @@ module load GCC/13.3.0
     exit 1
 }
 
-./scripts/profile_cache.sh "$GRAPH" "$UNDIRECTED" "$DELTA" "dynamic,256" "$ALGO"
+./scripts/profile_cache.sh "$GRAPH" "$UNDIRECTED" "$DELTA" "dynamic,256" "$ALGO" "$THREADS"

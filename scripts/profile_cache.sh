@@ -6,12 +6,13 @@
 # one run per configuration is enough - no warmup, no repetition.
 #
 # algo picks which parallel implementation to profile (dsa, wasp, or both
-# with "all"), so a large graph can be split across several smaller jobs
-# instead of one long one -- Dijkstra always runs too (cheap, and needed
-# as the single-threaded reference), but is skipped if already logged.
+# with "all"), and threads picks which thread counts to profile -- so a
+# large graph can be split across several smaller jobs instead of one long
+# one. Dijkstra always runs too (cheap, and needed as the single-threaded
+# reference), but is skipped if already logged.
 #
 # Usage:
-#   ./scripts/profile_cache.sh [graph_file] [undirected=0] [delta=10.0] [schedule=dynamic,256] [algo=all]
+#   ./scripts/profile_cache.sh [graph_file] [undirected=0] [delta=10.0] [schedule=dynamic,256] [algo=all] [threads=1,4,16,64]
 #
 
 set -euo pipefail
@@ -21,7 +22,7 @@ UNDIRECTED="${2:-0}"
 DELTA="${3:-10.0}"
 SCHEDULE="${4:-dynamic,256}"
 ALGO="${5:-all}"
-THREADS=(1 4 16 64)
+IFS=',' read -r -a THREADS <<< "${6:-1,4,16,64}"
 
 case "$ALGO" in
     all|dsa|wasp) ;;
