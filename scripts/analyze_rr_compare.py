@@ -70,10 +70,10 @@ def collect(graph_dir, config):
     return result
 
 
-def find_dsa_config(graph_dir):
-    for path in graph_dir.glob("dsa_t*_rr.csv"):
-        return path.stem.rsplit("_rr", 1)[0]  # "dsa_t32"
-    for path in graph_dir.glob("dsa_t*_rr.log"):
+def find_config(graph_dir, algo):
+    for path in graph_dir.glob(f"{algo}_t*_rr.csv"):
+        return path.stem.rsplit("_rr", 1)[0]  # e.g. "dsa_t32"
+    for path in graph_dir.glob(f"{algo}_t*_rr.log"):
         return path.stem.rsplit("_rr", 1)[0]
     return None
 
@@ -127,11 +127,17 @@ def main():
         if dijkstra_entry:
             rows.append(print_row(gname, "dijkstra", dijkstra_entry))
 
-        dsa_config = find_dsa_config(graph_dir)
+        dsa_config = find_config(graph_dir, "dsa")
         if dsa_config:
             dsa_entry = collect(graph_dir, dsa_config)
             if dsa_entry:
                 rows.append(print_row(gname, dsa_config, dsa_entry))
+
+        wasp_config = find_config(graph_dir, "wasp")
+        if wasp_config:
+            wasp_entry = collect(graph_dir, wasp_config)
+            if wasp_entry:
+                rows.append(print_row(gname, wasp_config, wasp_entry))
 
     if not rows:
         sys.exit(f"no comparison data found under {rr_dir}")

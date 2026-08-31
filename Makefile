@@ -5,11 +5,15 @@ CSR = src/common/graph_csr.c
 RR = src/common/graph_rr.c
 LDFLAGS = -lm -lrt
 
-all: dsa dijkstra reorder
+all: dsa wasp dijkstra reorder
 
 dsa:
 	mkdir -p bin
 	gcc $(CFLAGS) -fopenmp src/delta_stepping.c $(COMMON) $(CSR) $(RR) -Isrc -o bin/dsa $(LDFLAGS)
+
+wasp:
+	mkdir -p bin
+	gcc $(CFLAGS) -fopenmp src/wasp.c $(COMMON) $(CSR) $(RR) -Isrc -o bin/wasp $(LDFLAGS)
 
 dijkstra:
 	mkdir -p bin
@@ -26,6 +30,10 @@ reorder:
 dsa_prof:
 	mkdir -p bin
 	gcc $(CFLAGS_PROF) -fopenmp src/delta_stepping.c $(COMMON) $(CSR) $(RR) -Isrc -o bin/dsa_prof $(LDFLAGS)
+
+wasp_prof:
+	mkdir -p bin
+	gcc $(CFLAGS_PROF) -fopenmp src/wasp.c $(COMMON) $(CSR) $(RR) -Isrc -o bin/wasp_prof $(LDFLAGS)
 
 dijkstra_prof:
 	mkdir -p bin

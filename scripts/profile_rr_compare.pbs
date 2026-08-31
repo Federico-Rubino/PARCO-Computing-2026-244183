@@ -19,8 +19,8 @@ module load GCC/13.3.0
 # built once, before submitting -- never rebuild here, same reasoning as
 # run_experiments.pbs/profile_cache.pbs: concurrent jobs rebuilding the
 # same shared binaries race and can corrupt each other's runs
-[ -x bin/dsa ] && [ -x bin/dijkstra ] && [ -x bin/dsa_prof ] && [ -x bin/dijkstra_prof ] || {
-    echo "one of bin/dsa, bin/dijkstra, bin/dsa_prof, bin/dijkstra_prof is missing/not executable -- run 'make dsa dijkstra dsa_prof dijkstra_prof' once, before submitting, not inside the job" >&2
+[ -x bin/dsa ] && [ -x bin/wasp ] && [ -x bin/dijkstra ] && [ -x bin/dsa_prof ] && [ -x bin/wasp_prof ] && [ -x bin/dijkstra_prof ] || {
+    echo "one of bin/dsa, bin/wasp, bin/dijkstra, bin/dsa_prof, bin/wasp_prof, bin/dijkstra_prof is missing/not executable -- run 'make dsa wasp dijkstra dsa_prof wasp_prof dijkstra_prof' once, before submitting, not inside the job" >&2
     exit 1
 }
 

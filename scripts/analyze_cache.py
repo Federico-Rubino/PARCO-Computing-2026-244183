@@ -24,6 +24,7 @@ STAT_PATTERNS = {
 
 FNAME_DIJKSTRA = re.compile(r"^(?P<graph>.+)_dijkstra\.log$")
 FNAME_DSA = re.compile(r"^(?P<graph>.+)_dsa_t(?P<threads>\d+)\.log$")
+FNAME_WASP = re.compile(r"^(?P<graph>.+)_wasp_t(?P<threads>\d+)\.log$")
 
 
 def parse_log(path):
@@ -62,10 +63,14 @@ def main():
             graph, algo, threads = m.group("graph"), "dijkstra", 1
         else:
             m = FNAME_DSA.match(path.name)
-            if not m:
-                print(f"skip: {path.name} (unrecognized filename)", file=sys.stderr)
-                continue
-            graph, algo, threads = m.group("graph"), "dsa", int(m.group("threads"))
+            if m:
+                graph, algo, threads = m.group("graph"), "dsa", int(m.group("threads"))
+            else:
+                m = FNAME_WASP.match(path.name)
+                if not m:
+                    print(f"skip: {path.name} (unrecognized filename)", file=sys.stderr)
+                    continue
+                graph, algo, threads = m.group("graph"), "wasp", int(m.group("threads"))
 
         try:
             stats = parse_log(path)

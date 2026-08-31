@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# run_experiments.sh - strong scaling sweep for Delta-Stepping, verified
-# against the Dijkstra ground truth.
+# run_experiments.sh - strong scaling sweep for Delta-Stepping and Wasp,
+# verified against the Dijkstra ground truth.
 #
 # Usage:
 #   ./scripts/run_experiments.sh [graph_file] [undirected=0] [delta=10.0] [schedule=dynamic,64]
@@ -41,8 +41,34 @@ for T in "${THREADS[@]}"; do
     CSV_OUT="$BENCH_DIR/dsa_t${T}.csv"
     DIST_OUT="$BENCH_DIR/dsa_t${T}_dist.txt"
 
+    if [ -f "$CSV_OUT" ]; then
+        echo "-> threads: $T (skip, already have $CSV_OUT)"
+        continue
+    fi
+
     echo "-> threads: $T"
     ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
+        "$CSV_OUT" "$DIST_OUT"
+
+    python3 scripts/compare_dist.py --quiet "$GT_DIST" "$DIST_OUT"
+    rm -f "$DIST_OUT"
+done
+
+echo "== Wasp strong scaling: $GNAME (delta=$DELTA) =="
+
+for T in "${THREADS[@]}"; do
+    export OMP_NUM_THREADS=$T
+
+    CSV_OUT="$BENCH_DIR/wasp_t${T}.csv"
+    DIST_OUT="$BENCH_DIR/wasp_t${T}_dist.txt"
+
+    if [ -f "$CSV_OUT" ]; then
+        echo "-> threads: $T (skip, already have $CSV_OUT)"
+        continue
+    fi
+
+    echo "-> threads: $T"
+    ./bin/wasp "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
         "$CSV_OUT" "$DIST_OUT"
 
     python3 scripts/compare_dist.py --quiet "$GT_DIST" "$DIST_OUT"

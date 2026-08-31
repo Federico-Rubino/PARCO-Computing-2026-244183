@@ -19,11 +19,11 @@ module load GCC/13.3.0
 
 # built once, before submitting -- never rebuild here: with several of
 # these jobs running concurrently, each doing "make" would race on the
-# same shared bin/dsa and bin/dijkstra files (seen in practice as a
-# linker "Stale file handle" in one job and a segfault, from the binary
-# being overwritten mid-execution, in another)
-[ -x bin/dsa ] && [ -x bin/dijkstra ] || {
-    echo "bin/dsa or bin/dijkstra missing/not executable -- run 'make dsa dijkstra' once, before submitting, not inside the job" >&2
+# same shared bin/dsa, bin/wasp and bin/dijkstra files (seen in practice
+# as a linker "Stale file handle" in one job and a segfault, from the
+# binary being overwritten mid-execution, in another)
+[ -x bin/dsa ] && [ -x bin/wasp ] && [ -x bin/dijkstra ] || {
+    echo "bin/dsa, bin/wasp or bin/dijkstra missing/not executable -- run 'make dsa wasp dijkstra' once, before submitting, not inside the job" >&2
     exit 1
 }
 
