@@ -1,0 +1,12 @@
+==1444799== Cachegrind, a high-precision tracing profiler
+==1444799== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==1444799== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==1444799== Command: ./bin/wasp_prof data/com-orkut.ungraph.txt 1 auto 2 0 1
+==1444799== 
+--1444799-- warning: L3 cache found, using its data for the LL simulation.
+--1444799-- warning: specified LL cache: line_size 64  assoc 11  total_size 25,952,256
+--1444799-- warning: simulated LL cache: line_size 64  assoc 12  total_size 25,165,824
+==1444799== brk segment overflow in thread #1: can't grow to 0x4c15000
+==1444799== (see section Limitations in user manual)
+==1444799== NOTE: further instances of this message will not be shown
+source: auto -> vertex 660769

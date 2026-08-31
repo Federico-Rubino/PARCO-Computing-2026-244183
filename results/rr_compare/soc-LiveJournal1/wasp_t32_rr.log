@@ -1,0 +1,12 @@
+==1720584== Cachegrind, a high-precision tracing profiler
+==1720584== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==1720584== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==1720584== Command: ./bin/wasp_prof data/soc-LiveJournal1.txt 0 auto 5 0 1
+==1720584== 
+--1720584-- warning: L3 cache found, using its data for the LL simulation.
+--1720584-- warning: specified LL cache: line_size 64  assoc 11  total_size 37,486,592
+--1720584-- warning: simulated LL cache: line_size 64  assoc 18  total_size 37,748,736
+==1720584== brk segment overflow in thread #1: can't grow to 0x52da000
+==1720584== (see section Limitations in user manual)
+==1720584== NOTE: further instances of this message will not be shown
+source: auto -> vertex 698675
