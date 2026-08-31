@@ -117,23 +117,16 @@ static int wasp_find_next_local(wasp_thread_t *th){
     return -1;
 }
 
-static unsigned int wasp_xorshift(unsigned int *state){
-    *state ^= *state << 13;
-    *state ^= *state >> 17;
-    *state ^= *state << 5;
-    return *state;
-}
-
 // steals half of a victim's bucket; random start avoids piling on one victim
 static int wasp_try_steal(wasp_thread_t *threads, int nthreads, int self,
                            bucket_t *out, int *out_prio){
     if(nthreads < 2) return 0;
 
-    static __thread unsigned int rng_state = 0;
-    if(rng_state == 0) rng_state = (unsigned int)(self * 2654435761u + 1u);
+    static __thread unsigned int rng_seed = 0;
+    if(rng_seed == 0) rng_seed = (unsigned int)self + 1;
 
     int span = nthreads - 1;
-    int start = 1 + (int)(wasp_xorshift(&rng_state) % (unsigned int)span);
+    int start = 1 + rand_r(&rng_seed) % span;
 
     for(int i = 0; i < span; i++){
         int off = 1 + (start - 1 + i) % span;
@@ -161,17 +154,15 @@ static int wasp_try_steal(wasp_thread_t *threads, int nthreads, int self,
     return 0;
 }
 
-// yield, then sleep with growing delay, capped at 1ms
-static void wasp_backoff(int *tier){
-    if(*tier < 4){
+// yield a few times, then just sleep a bit instead of spinning
+static void wasp_backoff(int *tries){
+    if(*tries < 4){
         sched_yield();
     } else {
-        long ns = 1000L << (*tier - 4);
-        if(ns > 1000000L) ns = 1000000L;
-        struct timespec ts = {0, ns};
+        struct timespec ts = {0, 50000}; // 50us
         nanosleep(&ts, NULL);
     }
-    if(*tier < 20) (*tier)++;
+    (*tries)++;
 }
 
 static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *dist, float delta){
@@ -181,7 +172,7 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
     bucket_t stolen;
     int stolen_prio;
 
-    for(;;){
+    while(1){
         if(self->current.count == 0){
             int p = wasp_find_next_local(self);
             if(p >= 0){
@@ -211,8 +202,8 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
                     { ws->active_count--; active = ws->active_count; }
                     if(active == 0) return;
 
-                    int backoff_tier = 0;
-                    for(;;){
+                    int idle_tries = 0;
+                    while(1){
                         #pragma omp atomic read
                         active = ws->active_count;
                         if(active == 0) return;
@@ -229,7 +220,7 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
                             free(stolen.nodes);
                             break;
                         }
-                        wasp_backoff(&backoff_tier);
+                        wasp_backoff(&idle_tries);
                     }
                 }
                 continue;
@@ -239,7 +230,7 @@ static void wasp_worker(int tid, wasp_workspace_t *ws, csr_graph_t *g, float *di
         int prio = self->curr_prio;
 
         // small chunks at a time, so current stays mostly stealable
-        for(;;){
+        while(1){
             uint32_t chunk[WASP_CHUNK_SIZE];
             uint32_t chunk_n;
 
