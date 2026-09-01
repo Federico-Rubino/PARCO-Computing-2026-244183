@@ -1,0 +1,26 @@
+==2017996== Cachegrind, a high-precision tracing profiler
+==2017996== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==2017996== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==2017996== Command: ./bin/dijkstra_prof data/soc-pokec-relationships.txt 0 auto 0 1
+==2017996== 
+--2017996-- warning: L3 cache found, using its data for the LL simulation.
+==2017996== brk segment overflow in thread #1: can't grow to 0x4cd0000
+==2017996== (see section Limitations in user manual)
+==2017996== NOTE: further instances of this message will not be shown
+source: auto -> vertex 73249
+==2017996== 
+==2017996== I refs:        127,342,805,330
+==2017996== I1  misses:              2,075
+==2017996== LLi misses:              2,061
+==2017996== I1  miss rate:            0.00%
+==2017996== LLi miss rate:            0.00%
+==2017996== 
+==2017996== D refs:         45,928,169,135  (28,196,762,680 rd   + 17,731,406,455 wr)
+==2017996== D1  misses:        200,713,975  (   170,058,511 rd   +     30,655,464 wr)
+==2017996== LLd misses:         55,225,892  (    35,315,604 rd   +     19,910,288 wr)
+==2017996== D1  miss rate:             0.4% (           0.6%     +            0.2%  )
+==2017996== LLd miss rate:             0.1% (           0.1%     +            0.1%  )
+==2017996== 
+==2017996== LL refs:           200,716,050  (   170,060,586 rd   +     30,655,464 wr)
+==2017996== LL misses:          55,227,953  (    35,317,665 rd   +     19,910,288 wr)
+==2017996== LL miss rate:              0.0% (           0.0%     +            0.1%  )

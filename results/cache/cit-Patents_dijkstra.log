@@ -1,0 +1,28 @@
+==1113101== Cachegrind, a high-precision tracing profiler
+==1113101== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==1113101== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==1113101== Command: ./bin/dijkstra_prof data/cit-Patents.txt 0 auto 0 1
+==1113101== 
+--1113101-- warning: L3 cache found, using its data for the LL simulation.
+--1113101-- warning: specified LL cache: line_size 64  assoc 11  total_size 37,486,592
+--1113101-- warning: simulated LL cache: line_size 64  assoc 18  total_size 37,748,736
+==1113101== brk segment overflow in thread #1: can't grow to 0x5747000
+==1113101== (see section Limitations in user manual)
+==1113101== NOTE: further instances of this message will not be shown
+source: auto -> vertex 5964205
+==1113101== 
+==1113101== I refs:        75,818,764,817
+==1113101== I1  misses:             2,086
+==1113101== LLi misses:             2,067
+==1113101== I1  miss rate:           0.00%
+==1113101== LLi miss rate:           0.00%
+==1113101== 
+==1113101== D refs:        27,551,434,887  (17,023,411,925 rd   + 10,528,022,962 wr)
+==1113101== D1  misses:       159,837,888  (   113,935,485 rd   +     45,902,403 wr)
+==1113101== LLd misses:        76,866,878  (    52,760,425 rd   +     24,106,453 wr)
+==1113101== D1  miss rate:            0.6% (           0.7%     +            0.4%  )
+==1113101== LLd miss rate:            0.3% (           0.3%     +            0.2%  )
+==1113101== 
+==1113101== LL refs:          159,839,974  (   113,937,571 rd   +     45,902,403 wr)
+==1113101== LL misses:         76,868,945  (    52,762,492 rd   +     24,106,453 wr)
+==1113101== LL miss rate:             0.1% (           0.1%     +            0.2%  )

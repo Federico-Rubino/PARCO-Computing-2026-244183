@@ -1,0 +1,28 @@
+==3332283== Cachegrind, a high-precision tracing profiler
+==3332283== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==3332283== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==3332283== Command: ./bin/wasp_prof data/soc-pokec-relationships.txt 0 auto 5 0 1
+==3332283== 
+--3332283-- warning: L3 cache found, using its data for the LL simulation.
+--3332283-- warning: specified LL cache: line_size 64  assoc 11  total_size 25,952,256
+--3332283-- warning: simulated LL cache: line_size 64  assoc 12  total_size 25,165,824
+==3332283== brk segment overflow in thread #1: can't grow to 0x4cd0000
+==3332283== (see section Limitations in user manual)
+==3332283== NOTE: further instances of this message will not be shown
+source: auto -> vertex 73249
+==3332283== 
+==3332283== I refs:        141,677,403,496
+==3332283== I1  misses:              2,795
+==3332283== LLi misses:              2,745
+==3332283== I1  miss rate:            0.00%
+==3332283== LLi miss rate:            0.00%
+==3332283== 
+==3332283== D refs:         70,161,529,808  (40,341,005,044 rd   + 29,820,524,764 wr)
+==3332283== D1  misses:      1,218,750,426  ( 1,186,959,373 rd   +     31,791,053 wr)
+==3332283== LLd misses:         70,939,172  (    48,909,437 rd   +     22,029,735 wr)
+==3332283== D1  miss rate:             1.7% (           2.9%     +            0.1%  )
+==3332283== LLd miss rate:             0.1% (           0.1%     +            0.1%  )
+==3332283== 
+==3332283== LL refs:         1,218,753,221  ( 1,186,962,168 rd   +     31,791,053 wr)
+==3332283== LL misses:          70,941,917  (    48,912,182 rd   +     22,029,735 wr)
+==3332283== LL miss rate:              0.0% (           0.0%     +            0.1%  )

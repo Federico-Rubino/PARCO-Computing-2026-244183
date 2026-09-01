@@ -1,0 +1,28 @@
+==1741849== Cachegrind, a high-precision tracing profiler
+==1741849== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==1741849== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==1741849== Command: ./bin/dsa_prof data/soc-LiveJournal1.txt 0 auto 5 0 1
+==1741849== 
+--1741849-- warning: L3 cache found, using its data for the LL simulation.
+--1741849-- warning: specified LL cache: line_size 64  assoc 11  total_size 25,952,256
+--1741849-- warning: simulated LL cache: line_size 64  assoc 12  total_size 25,165,824
+==1741849== brk segment overflow in thread #1: can't grow to 0x52d9000
+==1741849== (see section Limitations in user manual)
+==1741849== NOTE: further instances of this message will not be shown
+source: auto -> vertex 698675
+==1741849== 
+==1741849== I refs:        294,347,721,744
+==1741849== I1  misses:              2,694
+==1741849== LLi misses:              2,649
+==1741849== I1  miss rate:            0.00%
+==1741849== LLi miss rate:            0.00%
+==1741849== 
+==1741849== D refs:        105,896,787,393  (65,612,618,744 rd   + 40,284,168,649 wr)
+==1741849== D1  misses:        537,083,146  (   452,004,899 rd   +     85,078,247 wr)
+==1741849== LLd misses:        261,491,876  (   201,451,533 rd   +     60,040,343 wr)
+==1741849== D1  miss rate:             0.5% (           0.7%     +            0.2%  )
+==1741849== LLd miss rate:             0.2% (           0.3%     +            0.1%  )
+==1741849== 
+==1741849== LL refs:           537,085,840  (   452,007,593 rd   +     85,078,247 wr)
+==1741849== LL misses:         261,494,525  (   201,454,182 rd   +     60,040,343 wr)
+==1741849== LL miss rate:              0.1% (           0.1%     +            0.1%  )

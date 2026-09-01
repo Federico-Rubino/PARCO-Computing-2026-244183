@@ -1,0 +1,25 @@
+==3095067== Cachegrind, a high-precision tracing profiler
+==3095067== Copyright (C) 2002-2024, and GNU GPL'd, by Nicholas Nethercote et al.
+==3095067== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==3095067== Command: ./bin/dsa_prof data/soc-pokec-relationships.txt 0 auto 5 0 1
+==3095067== 
+--3095067-- warning: L3 cache found, using its data for the LL simulation.
+--3095067-- warning: specified LL cache: line_size 64  assoc 11  total_size 37,486,592
+--3095067-- warning: simulated LL cache: line_size 64  assoc 18  total_size 37,748,736
+source: auto -> vertex 5867
+==3095067== 
+==3095067== I refs:        124,730,046,929
+==3095067== I1  misses:              3,187
+==3095067== LLi misses:              2,981
+==3095067== I1  miss rate:            0.00%
+==3095067== LLi miss rate:            0.00%
+==3095067== 
+==3095067== D refs:         44,826,854,861  (27,638,380,703 rd   + 17,188,474,158 wr)
+==3095067== D1  misses:        116,424,298  (   101,489,773 rd   +     14,934,525 wr)
+==3095067== LLd misses:         52,571,344  (    37,891,882 rd   +     14,679,462 wr)
+==3095067== D1  miss rate:             0.3% (           0.4%     +            0.1%  )
+==3095067== LLd miss rate:             0.1% (           0.1%     +            0.1%  )
+==3095067== 
+==3095067== LL refs:           116,427,485  (   101,492,960 rd   +     14,934,525 wr)
+==3095067== LL misses:          52,574,325  (    37,894,863 rd   +     14,679,462 wr)
+==3095067== LL miss rate:              0.0% (           0.0%     +            0.1%  )
