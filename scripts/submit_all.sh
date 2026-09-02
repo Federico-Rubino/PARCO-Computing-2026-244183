@@ -11,11 +11,7 @@ set -euo pipefail
 
 mkdir -p logs
 
-# graph_file  undirected  delta  schedule (comma replaced by underscore,
-# qsub -v splits on comma) -- final set, all tuned via tune_params.sh
-# (delta, per graph) + verify_tuning_grid.sh (schedule, tuned once on
-# soc-LiveJournal1 and reused everywhere - see results/tuning/ and
-# project memory for the full sweep tables and reasoning per graph)
+# graph_file  undirected  delta  schedule -- tuned via tune_params.sh + verify_tuning_grid.sh
 GRAPHS=(
     "data/cit-Patents.txt                0  50  dynamic_256"
     "data/soc-pokec-relationships.txt    0  5   dynamic_256"

@@ -88,7 +88,7 @@ def plot_panel(ax, gname, dsa_threads, dsa_speedup, wasp_threads, wasp_speedup):
     ax.set_xticklabels(dsa_threads)
     ax.set_title(gname, fontsize=9, color=COLOR_INK)
     ax.set_xlabel("threads", fontsize=8)
-    ax.set_ylabel("speedup vs. T1", fontsize=8)
+    ax.set_ylabel("speedup vs. T1 (×)", fontsize=8)
     style_axes(ax)
 
 

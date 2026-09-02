@@ -16,9 +16,7 @@ THREADS="${THREADS//_/,}"   # qsub -v splits on comma, so it arrives underscore-
 
 module load GCC/13.3.0
 
-# built once, before submitting -- never rebuild here, same reasoning as
-# run_experiments.pbs: concurrent jobs rebuilding the same shared binaries
-# race and can corrupt each other's runs
+# built once before submitting; concurrent rebuilds race on the shared binaries
 [ -x bin/dsa_prof ] && [ -x bin/wasp_prof ] && [ -x bin/dijkstra_prof ] || {
     echo "bin/dsa_prof, bin/wasp_prof or bin/dijkstra_prof missing/not executable -- run 'make dsa_prof wasp_prof dijkstra_prof' once, before submitting, not inside the job" >&2
     exit 1
