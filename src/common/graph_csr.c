@@ -109,11 +109,7 @@ void free_csr(csr_graph_t *graph){
     graph->weights = NULL;
 }
 
-// graphs loaded from files with non-remapped, real-world ids (e.g. patent
-// numbers) can have vertex 0 be an id that never appears in the file, with
-// zero edges; picking a source by raw array index can silently give a
-// degenerate, near-empty SSSP problem, so callers should default to this
-// instead of literal vertex 0
+// avoids a degenerate source when vertex 0 has no edges
 uint32_t max_out_degree_vertex(csr_graph_t *graph){
     uint32_t best = 0;
     uint64_t best_degree = 0;

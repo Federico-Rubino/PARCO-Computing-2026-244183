@@ -34,8 +34,7 @@ static void ds_workspace_init(ds_workspace_t *ws, csr_graph_t *g, float delta){
     for(uint64_t i = 0; i < g->num_edges; i++)
         if(g->weights[i] > max_w) max_w = g->weights[i];
 
-    // a vertex can be relaxed at most ceil(max_w/delta) buckets ahead of the
-    // one currently being processed; +2 gives margin against edge rounding
+    // margin so a relaxation can't land on an already-settled bucket
     ws->num_slots = (uint32_t)ceilf(max_w / delta) + 2;
 
     ws->buckets = calloc(ws->num_slots, sizeof(bucket_t));
@@ -88,8 +87,7 @@ static void relax(float *dist, bucket_t *local_buckets, uint32_t num_slots,
     }
 
     if(nd < old_d){
-        // thread-local, no lock: merged into the shared buckets once per
-        // thread per parallel region by merge_local_buckets()
+        // thread-local: merged into buckets once per region
         uint32_t slot = (uint32_t)(nd / delta) % num_slots;
         bucket_push(&local_buckets[slot], v);
     }

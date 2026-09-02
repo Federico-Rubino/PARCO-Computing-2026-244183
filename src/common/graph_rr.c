@@ -94,9 +94,7 @@ int compute_rabbit_order(csr_graph_t *origin, uint32_t *perm, uint32_t *inv_perm
             uint32_t v = origin->col_idx[e];
             uint32_t cv = community[v];
             if(cv == community[u]) continue;
-            // only merge into a strictly larger community: without this, every
-            // vertex (hubs included) finds some positive-gain neighbor and
-            // merges away, leaving no stable roots for the dendrogram at all
+            // merge only into a strictly larger community, or no root survives
             if(atoms[cv].degree <= deg_u) continue;
 
             float gain = compute_delta_q(deg_u, atoms[cv].degree, m, origin->weights[e]);
