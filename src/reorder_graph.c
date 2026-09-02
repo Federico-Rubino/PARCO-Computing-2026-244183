@@ -12,6 +12,7 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    // parse arguments
     const char *input_file = argv[1];
     const char *output_file = argv[2];
     int undirected = argc > 3 ? atoi(argv[3]) : 0;
@@ -65,6 +66,7 @@ int main(int argc, char **argv){
         }
     }
 
+    // cleanup
     free_csr(&reordered);
     free_csr(&origin);
     free(perm);

@@ -76,6 +76,7 @@ int main(int argc, char **argv){
         fprintf(stderr, "usage: %s <graph_file> [undirected=0] [source=auto] [warmup_runs=5] [num_runs=10] [csv_out_file] [dist_out_file]\n", argv[0]);
         return 1;
     }
+    // parse arguments
     const char *filename = argv[1];
     int undirected = argc > 2 ? atoi(argv[2]) : 0;
     const char *source_arg = argc > 3 ? argv[3] : "auto";
@@ -84,12 +85,14 @@ int main(int argc, char **argv){
     const char *csv_out = argc > 6 ? argv[6] : NULL;
     const char *dist_out = argc > 7 ? argv[7] : NULL;
 
+    // load graph
     csr_graph_t g;
     if(load_csr(filename, &g, undirected) != 0){
         fprintf(stderr, "failed to load %s\n", filename);
         return 1;
     }
 
+    // apply rabbit reordering
     const char *rr_env = getenv("RABBIT_REORDER");
     if(!(rr_env && strcmp(rr_env, "0") == 0)){
         csr_graph_t reordered;
@@ -101,6 +104,7 @@ int main(int argc, char **argv){
         }
     }
 
+    // pick source vertex
     uint32_t source;
     if(strcmp(source_arg, "auto") == 0){
         source = max_out_degree_vertex(&g);
@@ -109,6 +113,7 @@ int main(int argc, char **argv){
         source = (uint32_t)strtoul(source_arg, NULL, 10);
     }
 
+    // allocate buffers
     float *dist = malloc(g.num_vertices * sizeof(float));
     // upper bound: 1 initial push + at most one push per edge relaxation
     heap_node_t *heap = malloc((g.num_edges + 1) * sizeof(heap_node_t));
@@ -117,6 +122,7 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    // open csv output
     FILE *csv_f = NULL;
     if(csv_out){
         csv_f = fopen(csv_out, "w");
@@ -126,6 +132,7 @@ int main(int argc, char **argv){
     printf("run,time_ms\n");
     if(csv_f) fprintf(csv_f, "run,time_ms\n");
 
+    // run benchmark
     int total_runs = warmup_runs + num_runs;
     for(int run = 1; run <= total_runs; run++){
         size_t heap_size;
@@ -145,6 +152,7 @@ int main(int argc, char **argv){
 
     if(csv_f) fclose(csv_f);
 
+    // write distances
     if(dist_out){
         FILE *f = fopen(dist_out, "w");
         if(f){
@@ -154,6 +162,7 @@ int main(int argc, char **argv){
         }
     }
 
+    // cleanup
     free(dist);
     free(heap);
     free_csr(&g);
