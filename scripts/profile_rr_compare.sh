@@ -38,62 +38,38 @@ for RR in 1 0; do
     TAG=$([ "$RR" = "1" ] && echo "rr" || echo "norr")
     export RABBIT_REORDER=$RR
 
-    if [ -f "$OUT_DIR/dijkstra_${TAG}.csv" ]; then
-        echo "-> dijkstra, RABBIT_REORDER=$RR (timing, skip)"
-    else
-        echo "-> dijkstra, RABBIT_REORDER=$RR (timing)"
-        ./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto "$WARMUP_RUNS" "$NUM_RUNS" \
-            "$OUT_DIR/dijkstra_${TAG}.csv"
-    fi
+    echo "-> dijkstra, RABBIT_REORDER=$RR (timing)"
+    ./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto "$WARMUP_RUNS" "$NUM_RUNS" \
+        "$OUT_DIR/dijkstra_${TAG}.csv"
 
-    if [ -f "$OUT_DIR/dsa_t${THREADS}_${TAG}.csv" ]; then
-        echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (timing, skip)"
-    else
-        echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (timing)"
-        ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
-            "$OUT_DIR/dsa_t${THREADS}_${TAG}.csv"
-    fi
+    echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (timing)"
+    ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
+        "$OUT_DIR/dsa_t${THREADS}_${TAG}.csv"
 
-    if [ -f "$OUT_DIR/dijkstra_${TAG}.log" ]; then
-        echo "-> dijkstra, RABBIT_REORDER=$RR (cache, skip)"
-    else
-        echo "-> dijkstra, RABBIT_REORDER=$RR (cache)"
-        valgrind --tool=cachegrind --cache-sim=yes \
-            --cachegrind-out-file="$OUT_DIR/dijkstra_${TAG}.out" \
-            ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
-            > /dev/null 2> "$OUT_DIR/dijkstra_${TAG}.log"
-        rm -f "$OUT_DIR/dijkstra_${TAG}.out"
-    fi
+    echo "-> dijkstra, RABBIT_REORDER=$RR (cache)"
+    valgrind --tool=cachegrind --cache-sim=yes \
+        --cachegrind-out-file="$OUT_DIR/dijkstra_${TAG}.out" \
+        ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
+        > /dev/null 2> "$OUT_DIR/dijkstra_${TAG}.log"
+    rm -f "$OUT_DIR/dijkstra_${TAG}.out"
 
-    if [ -f "$OUT_DIR/dsa_t${THREADS}_${TAG}.log" ]; then
-        echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (cache, skip)"
-    else
-        echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (cache)"
-        valgrind --tool=cachegrind --cache-sim=yes \
-            --cachegrind-out-file="$OUT_DIR/dsa_t${THREADS}_${TAG}.out" \
-            ./bin/dsa_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
-            > /dev/null 2> "$OUT_DIR/dsa_t${THREADS}_${TAG}.log"
-        rm -f "$OUT_DIR/dsa_t${THREADS}_${TAG}.out"
-    fi
+    echo "-> dsa t=$THREADS, RABBIT_REORDER=$RR (cache)"
+    valgrind --tool=cachegrind --cache-sim=yes \
+        --cachegrind-out-file="$OUT_DIR/dsa_t${THREADS}_${TAG}.out" \
+        ./bin/dsa_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
+        > /dev/null 2> "$OUT_DIR/dsa_t${THREADS}_${TAG}.log"
+    rm -f "$OUT_DIR/dsa_t${THREADS}_${TAG}.out"
 
-    if [ -f "$OUT_DIR/wasp_t${THREADS}_${TAG}.csv" ]; then
-        echo "-> wasp t=$THREADS, RABBIT_REORDER=$RR (timing, skip)"
-    else
-        echo "-> wasp t=$THREADS, RABBIT_REORDER=$RR (timing)"
-        ./bin/wasp "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
-            "$OUT_DIR/wasp_t${THREADS}_${TAG}.csv"
-    fi
+    echo "-> wasp t=$THREADS, RABBIT_REORDER=$RR (timing)"
+    ./bin/wasp "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
+        "$OUT_DIR/wasp_t${THREADS}_${TAG}.csv"
 
-    if [ -f "$OUT_DIR/wasp_t${THREADS}_${TAG}.log" ]; then
-        echo "-> wasp t=$THREADS, RABBIT_REORDER=$RR (cache, skip)"
-    else
-        echo "-> wasp t=$THREADS, RABBIT_REORDER=$RR (cache)"
-        valgrind --tool=cachegrind --cache-sim=yes \
-            --cachegrind-out-file="$OUT_DIR/wasp_t${THREADS}_${TAG}.out" \
-            ./bin/wasp_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
-            > /dev/null 2> "$OUT_DIR/wasp_t${THREADS}_${TAG}.log"
-        rm -f "$OUT_DIR/wasp_t${THREADS}_${TAG}.out"
-    fi
+    echo "-> wasp t=$THREADS, RABBIT_REORDER=$RR (cache)"
+    valgrind --tool=cachegrind --cache-sim=yes \
+        --cachegrind-out-file="$OUT_DIR/wasp_t${THREADS}_${TAG}.out" \
+        ./bin/wasp_prof "$GRAPH" "$UNDIRECTED" auto "$DELTA" 0 1 \
+        > /dev/null 2> "$OUT_DIR/wasp_t${THREADS}_${TAG}.log"
+    rm -f "$OUT_DIR/wasp_t${THREADS}_${TAG}.out"
 done
 
 echo "== done: results in $OUT_DIR/ =="

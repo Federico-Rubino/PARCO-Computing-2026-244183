@@ -27,11 +27,9 @@ export OMP_PLACES=cores
 export OMP_PROC_BIND=close
 export OMP_SCHEDULE="$SCHEDULE"
 
-if [ ! -f "$GT_DIST" ]; then
-    echo "== Dijkstra ground truth: $GNAME =="
-    ./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto "$WARMUP_RUNS" "$NUM_RUNS" \
-        "$BENCH_DIR/dijkstra.csv" "$GT_DIST"
-fi
+echo "== Dijkstra ground truth: $GNAME =="
+./bin/dijkstra "$GRAPH" "$UNDIRECTED" auto "$WARMUP_RUNS" "$NUM_RUNS" \
+    "$BENCH_DIR/dijkstra.csv" "$GT_DIST"
 
 echo "== Delta-stepping strong scaling: $GNAME (delta=$DELTA, schedule=$SCHEDULE) =="
 
@@ -40,11 +38,6 @@ for T in "${THREADS[@]}"; do
 
     CSV_OUT="$BENCH_DIR/dsa_t${T}.csv"
     DIST_OUT="$BENCH_DIR/dsa_t${T}_dist.txt"
-
-    if [ -f "$CSV_OUT" ]; then
-        echo "-> threads: $T (skip, already have $CSV_OUT)"
-        continue
-    fi
 
     echo "-> threads: $T"
     ./bin/dsa "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \
@@ -61,11 +54,6 @@ for T in "${THREADS[@]}"; do
 
     CSV_OUT="$BENCH_DIR/wasp_t${T}.csv"
     DIST_OUT="$BENCH_DIR/wasp_t${T}_dist.txt"
-
-    if [ -f "$CSV_OUT" ]; then
-        echo "-> threads: $T (skip, already have $CSV_OUT)"
-        continue
-    fi
 
     echo "-> threads: $T"
     ./bin/wasp "$GRAPH" "$UNDIRECTED" auto "$DELTA" "$WARMUP_RUNS" "$NUM_RUNS" \

@@ -9,7 +9,7 @@
 # with "all"), and threads picks which thread counts to profile -- so a
 # large graph can be split across several smaller jobs instead of one long
 # one. Dijkstra always runs too (cheap, and needed as the single-threaded
-# reference), but is skipped if already logged.
+# reference). Every run recomputes unconditionally, for reproducibility.
 #
 # Usage:
 #   ./scripts/profile_cache.sh [graph_file] [undirected=0] [delta=10.0] [schedule=dynamic,256] [algo=all] [threads=1,4,16,64]
@@ -39,26 +39,18 @@ export OMP_SCHEDULE="$SCHEDULE"
 command -v valgrind >/dev/null 2>&1 || { echo "valgrind not found in PATH" >&2; exit 1; }
 
 DIJKSTRA_LOG="$OUT_DIR/${GNAME}_dijkstra.log"
-if [ -f "$DIJKSTRA_LOG" ]; then
-    echo "== Dijkstra cache profile: $GNAME (skip, already have $DIJKSTRA_LOG) =="
-else
-    echo "== Dijkstra cache profile: $GNAME =="
-    valgrind --tool=cachegrind --cache-sim=yes \
-        --cachegrind-out-file="$OUT_DIR/${GNAME}_dijkstra.out" \
-        ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
-        > /dev/null 2> "$DIJKSTRA_LOG"
-    rm -f "$OUT_DIR/${GNAME}_dijkstra.out"
-fi
+echo "== Dijkstra cache profile: $GNAME =="
+valgrind --tool=cachegrind --cache-sim=yes \
+    --cachegrind-out-file="$OUT_DIR/${GNAME}_dijkstra.out" \
+    ./bin/dijkstra_prof "$GRAPH" "$UNDIRECTED" auto 0 1 \
+    > /dev/null 2> "$DIJKSTRA_LOG"
+rm -f "$OUT_DIR/${GNAME}_dijkstra.out"
 
 if [ "$ALGO" = "all" ] || [ "$ALGO" = "dsa" ]; then
     echo "== Delta-stepping cache profile: $GNAME (delta=$DELTA) =="
     for T in "${THREADS[@]}"; do
         export OMP_NUM_THREADS=$T
         LOG="$OUT_DIR/${GNAME}_dsa_t${T}.log"
-        if [ -f "$LOG" ]; then
-            echo "-> threads: $T (skip, already have $LOG)"
-            continue
-        fi
         echo "-> threads: $T"
         valgrind --tool=cachegrind --cache-sim=yes \
             --cachegrind-out-file="$OUT_DIR/${GNAME}_dsa_t${T}.out" \
@@ -73,10 +65,6 @@ if [ "$ALGO" = "all" ] || [ "$ALGO" = "wasp" ]; then
     for T in "${THREADS[@]}"; do
         export OMP_NUM_THREADS=$T
         LOG="$OUT_DIR/${GNAME}_wasp_t${T}.log"
-        if [ -f "$LOG" ]; then
-            echo "-> threads: $T (skip, already have $LOG)"
-            continue
-        fi
         echo "-> threads: $T"
         valgrind --tool=cachegrind --cache-sim=yes \
             --cachegrind-out-file="$OUT_DIR/${GNAME}_wasp_t${T}.out" \
